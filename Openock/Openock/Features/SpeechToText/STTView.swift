@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct STTView: View {
-  @StateObject private var sttRecorder = STTEngine()
+  @StateObject private var sttEngine = STTEngine()
   
   var body: some View {
     ZStack {
@@ -19,16 +19,16 @@ struct STTView: View {
       VStack {
         HStack {
           Spacer()
-          if sttRecorder.isRecording {
-            if sttRecorder.isPaused {
-              Button(action: { sttRecorder.resumeRecording() }) {
+          if sttEngine.isRecording {
+            if sttEngine.isPaused {
+              Button(action: { sttEngine.resumeRecording() }) {
                 Image(systemName: "play.circle.fill")
                   .font(.system(size: 28))
               }
               .buttonStyle(.borderless)
               .tint(.green)
             } else {
-              Button(action: { sttRecorder.pauseRecording() }) {
+              Button(action: { sttEngine.pauseRecording() }) {
                 Image(systemName: "pause.circle.fill")
                   .font(.system(size: 28))
               }
@@ -42,7 +42,7 @@ struct STTView: View {
         // Transcript display
         ScrollView {
           VStack(alignment: .leading, spacing: 10) {
-            if sttRecorder.transcript.isEmpty {
+            if sttEngine.transcript.isEmpty {
               VStack(alignment: .center, spacing: 10) {
                 Image(systemName: "text.bubble")
                   .font(.system(size: 40))
@@ -54,7 +54,7 @@ struct STTView: View {
               .frame(maxWidth: .infinity)
               .padding(.vertical, 40)
             } else {
-              Text(sttRecorder.transcript)
+              Text(sttEngine.transcript)
                 .textSelection(.enabled)
                 .font(.title)
                 .lineSpacing(4)
@@ -62,9 +62,9 @@ struct STTView: View {
           }
           .frame(maxWidth: .infinity, alignment: .leading)
           .onAppear {
-            sttRecorder.setupSystemCapture { success in
+            sttEngine.setupSystemCapture { success in
               if success {
-                sttRecorder.startRecording()
+                sttEngine.startRecording()
               } else {
                 print("Error")
               }
