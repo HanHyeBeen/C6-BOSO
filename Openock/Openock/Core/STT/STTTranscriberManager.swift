@@ -46,6 +46,11 @@ class STTTranscriberManager: ObservableObject {
       return
     }
     
+    // Assets
+    if let installationRequest = try? await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
+        try? await installationRequest.downloadAndInstall()
+    }
+    
     // Set up analyzer pipeline
     let analyzer = SpeechAnalyzer(modules: [transcriber])
     self.analyzer = analyzer
@@ -60,15 +65,14 @@ class STTTranscriberManager: ObservableObject {
     }
     
     // Create AsyncStream
-    let (sequence, continuation) = AsyncStream<AnalyzerInput>.makeStream()
-    self.inputContinuation = continuation
-    print("✅ [STTTranscriberManager] AsyncStream created")
+    let (inputSequence, inputBuilder) = AsyncStream.makeStream(of: AnalyzerInput.self)
+    self.inputContinuation = inputBuilder
     
     // Start analyzer
     Task {
       print("🔄 [STTTranscriberManager] Starting analyzer...")
       do {
-        try await analyzer.start(inputSequence: sequence)
+        try await analyzer.start(inputSequence: inputSequence)
         print("✅ [STTTranscriberManager] Analyzer started")
       } catch {
         print("❌ [STTTranscriberManager] Analyzer start error: \(error)")

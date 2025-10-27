@@ -45,8 +45,6 @@ class STTEngine: NSObject, ObservableObject {
   override init() {
     super.init()
     print("🎙️ [STTEngine] Initialized")
-    print("⚠️  [STTEngine] Developer ID distribution only - NOT for App Store")
-    
     // Observe transcript changes from TranscriberManager
     observeTranscriber()
   }
