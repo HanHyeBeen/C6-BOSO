@@ -135,9 +135,6 @@ class AudioCaptureManager {
   /// Setup full system audio capture (all processes)
   /// - Parameter completion: Callback with device ID if successful
   func setupFullSystemCapture(completion: @escaping (AudioObjectID?) -> Void) {
-    print("🔧 [AudioCaptureManager] Setting up full system audio capture...")
-    print("⚠️  [AudioCaptureManager] Developer ID distribution only - NOT for App Store")
-    
     // 1. Get all audio processes
     let processList = getAllAudioProcesses()
     print("✅ [AudioCaptureManager] Found \(processList.count) audio processes")

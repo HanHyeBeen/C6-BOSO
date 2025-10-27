@@ -38,7 +38,14 @@ class STTTranscriberManager: ObservableObject {
     print("🔄 [STTTranscriberManager] Starting transcription...")
     
     // Create SpeechTranscriber
-    transcriber = SpeechTranscriber(locale: Locale(identifier: "ko-KR"), preset: .progressiveTranscription)
+//    let preset = SpeechTranscriber.Preset.progressiveTranscription
+//    let transcriber = SpeechTranscriber(
+//        locale: Locale(identifier: "ko-KR"),
+//        transcriptionOptions: preset.transcriptionOptions,
+//        reportingOptions: preset.reportingOptions.union([.alternativeTranscriptions]),
+//        attributeOptions: preset.attributeOptions
+//    )
+    transcriber = SpeechTranscriber(locale: Locale(identifier: "ko-KR"), preset: .transcriptionWithAlternatives)
     print("✅ [STTTranscriberManager] SpeechTranscriber created")
     
     guard let transcriber = transcriber else {
