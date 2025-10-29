@@ -29,4 +29,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       w.collectionBehavior.insert(.fullScreenAuxiliary)
     }
   }
+
+  func applicationWillTerminate(_ notification: Notification) {
+    menuBarController?.cleanup()
+    menuBarController = nil
+  }
 }
