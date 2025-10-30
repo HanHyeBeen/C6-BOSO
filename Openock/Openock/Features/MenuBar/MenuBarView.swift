@@ -28,31 +28,41 @@ struct MenuBarView: View {
   // @State private var shortcutKey: String = ""
 
   var body: some View {
-    VStack(spacing: 10) {
+    VStack(spacing: 0) {
       Header()
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 8)
       // 상단 탭
       Tabs(tab: $tab)
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 10)
+      
+      Divider()
+        .padding(.top, 6)
+        .padding(.bottom, 20)
 
       // 탭 컨텐츠
-      Group {
-        switch tab {
-        case .appearance:
-          AppearanceView(
-            fontChoice: $fontChoice,
-            fontSize: $fontSize,
-            captionBG: $captionBG
-          )
-        case .sound:
-          SoundView()
-        case .shortcut:
-          ShortcutView()
+      HStack(spacing: 0) {
+        Spacer().frame(width: 16) // left gutter (always visible)
+        VStack(alignment: .leading, spacing: 0) {
+          switch tab {
+          case .appearance:
+            AppearanceView(
+              fontChoice: $fontChoice,
+              fontSize: $fontSize,
+              captionBG: $captionBG
+            )
+          case .sound:
+            SoundView()
+          case .shortcut:
+            ShortcutView()
+          }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        Spacer().frame(width: 16) // right gutter (always visible)
       }
-      .frame(maxHeight: .infinity)
-      .padding(.horizontal, 14)
+      .frame(maxHeight: .infinity, alignment: .top)
+      
     }
+    
     .background(Color.white)
     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 8)
@@ -86,21 +96,22 @@ private struct Tabs: View {
   @Binding var tab: MenuBarView.Tab
 
   var body: some View {
-    HStack(spacing: 8) {
+    HStack(spacing: 6) {
       ForEach(MenuBarView.Tab.allCases, id: \.self) { t in
         Button {
           tab = t
         } label: {
           Text(t.rawValue)
-            .font(.system(size: 14, weight: .semibold))
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
-            .background(tab == t ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.clear), in: Capsule())
+            .font(.system(size: 13, weight: tab == t ? .semibold : .regular))
+            .padding(.vertical, 4)
+            .padding(.horizontal, 6)
+            .background(tab == t ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.clear), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)
       }
       Spacer()
     }
+    
   }
 }
 
