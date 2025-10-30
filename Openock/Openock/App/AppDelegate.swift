@@ -7,8 +7,11 @@
 
 
 import AppKit
+import Combine
 
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
+  @Published var windowDidBecomeKey: Bool = false
+  
   func applicationDidFinishLaunching(_ notification: Notification) {
     NSWindow.allowsAutomaticWindowTabbing = false
     for window in NSApplication.shared.windows {
