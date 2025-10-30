@@ -9,11 +9,7 @@
 import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-  private var menuBarController: MenuBarController?
-
   func applicationDidFinishLaunching(_ notification: Notification) {
-    menuBarController = MenuBarController()
-
     NSWindow.allowsAutomaticWindowTabbing = false
     for window in NSApplication.shared.windows {
       window.applyLiquidGlass()
@@ -28,10 +24,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       w.collectionBehavior.insert(.canJoinAllSpaces)
       w.collectionBehavior.insert(.fullScreenAuxiliary)
     }
-  }
-
-  func applicationWillTerminate(_ notification: Notification) {
-    menuBarController?.cleanup()
-    menuBarController = nil
   }
 }
