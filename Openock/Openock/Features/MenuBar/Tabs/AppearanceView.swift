@@ -12,9 +12,9 @@ struct AppearanceView: View {
     case sfPro = "이것은 SF Pro 입니다."
     case noto = "이것은 Noto Serif KR 입니다."
   }
-  @Binding var fontChoice: FontChoice
+  @State private var fontChoice: FontChoice = .sfPro
 
-  @Binding var fontSize: Double
+  @State private var fontSize: Double = 24
   private let sizeRange: ClosedRange<Double> = 18...64
 
   enum CaptionBG: String, CaseIterable {
@@ -23,7 +23,7 @@ struct AppearanceView: View {
     case clear = "투명"
     case custom = "커스텀"
   }
-  @Binding var captionBG: CaptionBG
+  @State private var captionBG: CaptionBG = .black
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
@@ -155,9 +155,5 @@ struct AppearanceView: View {
 }
 
 #Preview {
-  AppearanceView(
-    fontChoice: .constant(.sfPro),
-    fontSize: .constant(24),
-    captionBG: .constant(.black)
-  )
+  AppearanceView()
 }

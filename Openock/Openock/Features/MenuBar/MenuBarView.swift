@@ -16,17 +16,6 @@ struct MenuBarView: View {
 
   @State private var tab: Tab = .appearance
 
-  // AppearanceView 상태
-  @State private var fontChoice: AppearanceView.FontChoice = .sfPro
-  @State private var fontSize: Double = 24
-  @State private var captionBG: AppearanceView.CaptionBG = .black
-
-  // SoundAlarmView 상태 (필요시 추가)
-  // @State private var soundEnabled: Bool = true
-
-  // ShortcutView 상태 (필요시 추가)
-  // @State private var shortcutKey: String = ""
-
   var body: some View {
     VStack(spacing: 0) {
       Header()
@@ -45,11 +34,7 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 0) {
           switch tab {
           case .appearance:
-            AppearanceView(
-              fontChoice: $fontChoice,
-              fontSize: $fontSize,
-              captionBG: $captionBG
-            )
+            AppearanceView()
           case .sound:
             SoundAlarmView()
           case .shortcut:
