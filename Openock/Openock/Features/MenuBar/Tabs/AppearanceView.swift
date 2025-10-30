@@ -14,11 +14,9 @@ struct AppearanceView: View {
   }
   @Binding var fontChoice: FontChoice
 
-  // 크기
   @Binding var fontSize: Double
-  private let sizeRange: ClosedRange<Double> = 14...40
+  private let sizeRange: ClosedRange<Double> = 18...64
 
-  // 자막배경
   enum CaptionBG: String, CaseIterable {
     case black = "블랙"
     case white = "화이트"
@@ -28,165 +26,131 @@ struct AppearanceView: View {
   @Binding var captionBG: CaptionBG
 
   var body: some View {
-    ScrollView(.vertical, showsIndicators: true) {
-      VStack(alignment: .leading, spacing: 18) {
-        // 서체
-        SectionHeader("서체")
-        VStack(spacing: 0) {
-          FontOptionRow(selected: $fontChoice, option: .sfPro)
-          Divider().opacity(0.08)
-          FontOptionRow(selected: $fontChoice, option: .noto)
-        }
-        .cardBackground()
+    VStack(alignment: .leading, spacing: 0) {
+      // 서체
+      VStack(alignment: .leading, spacing: 6) {
+        Text("서체")
+          .font(.system(size: 11))
+          .fontWeight(.semibold)
 
-        // 크기
-        SectionHeader("크기")
+        Form {
+          Section {
+            ForEach(FontChoice.allCases, id: \.self) { option in
+              Button {
+                fontChoice = option
+              } label: {
+                HStack(spacing: 12) {
+                  Image(systemName: "checkmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(fontChoice == option ? Color.accentColor : Color.clear)
+                    .frame(width: 16)
+
+                  Text(option.rawValue)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(.primary)
+
+                  Spacer()
+                }
+              }
+              .buttonStyle(.plain)
+            }
+          }
+        }
+        .formStyle(.grouped)
+        .padding(.horizontal, -24)
+        .padding(.vertical, -24)
+      }
+
+      // 크기
+      VStack(alignment: .leading, spacing: 6) {
+        Text("크기")
+          .font(.system(size: 11))
+          .fontWeight(.semibold)
+
         VStack(alignment: .leading, spacing: 12) {
-          HStack {
+          HStack(alignment: .firstTextBaseline) {
             Text("작게")
+              .font(.system(size: 11))
               .foregroundStyle(.secondary)
             Spacer()
             Text("\(Int(fontSize))pt")
-              .font(.system(size: 14, weight: .semibold))
-              .padding(.vertical, 6)
-              .padding(.horizontal, 10)
-              .background(.ultraThinMaterial, in: Capsule())
+              .font(.system(size: 12, weight: .semibold))
             Spacer()
             Text("크게")
+              .font(.system(size: 20))
               .foregroundStyle(.secondary)
           }
-          Slider(value: $fontSize, in: sizeRange, step: 1)
-            .tint(.primary.opacity(0.7))
+          Slider(value: $fontSize, in: sizeRange, step: 16)
         }
-        .cardBackground()
-
-        // 자막배경
-        SectionHeader("자막배경")
-        CaptionBackgroundGrid(selection: $captionBG)
-          .cardBackground()
+        .padding(16)
+        .background(Color(NSColor.quaternaryLabelColor).opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+          RoundedRectangle(cornerRadius: 8)
+            .stroke(Color(NSColor.separatorColor), lineWidth: 0.5)
+        )
       }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(.bottom, 8)
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-  }
-}
+      .padding(.bottom, 44)
 
-// MARK: - Font Row
-private struct FontOptionRow: View {
-  @Binding var selected: AppearanceView.FontChoice
-  let option: AppearanceView.FontChoice
+      // 자막배경
+      VStack(alignment: .leading, spacing: 6) {
+        Divider()
+          .padding(.horizontal, -24)
+        
+        Text("자막배경")
+          .font(.system(size: 11))
+          .fontWeight(.semibold)
 
-  var body: some View {
-    Button {
-      selected = option
-    } label: {
-      HStack(spacing: 12) {
-        Image(systemName: "checkmark")
-          .font(.system(size: 18, weight: .bold))
-          .foregroundStyle(selected == option ? Color.accentColor : Color.clear.opacity(0.001))
-          .frame(width: 24)
-        Text(option.rawValue)
-          .font(option == .sfPro ? .system(size: 22, weight: .semibold) :
-                 .system(.title3, design: .serif))
-          .foregroundStyle(.primary)
-        Spacer()
-      }
-      .contentShape(Rectangle())
-      .padding(.vertical, 12)
-      .padding(.horizontal, 12)
-    }
-    .buttonStyle(.plain)
-  }
-}
+        Form {
+          Section {
+            HStack(spacing: 8) {
+              ForEach(CaptionBG.allCases, id: \.self) { option in
+                Button {
+                  captionBG = option
+                } label: {
+                  VStack(spacing: 4) {
+                    ZStack {
+                      if option == .black {
+                        Color.black
+                        Text("가").foregroundStyle(.white)
+                      } else if option == .white {
+                        Color.white
+                        Text("가").foregroundStyle(.black)
+                      } else if option == .clear {
+                        Color.clear
+                        Text("가").foregroundStyle(.gray)
+                      } else {
+                        Color.pink.opacity(0.3)
+                        Text("가").foregroundStyle(.primary)
+                      }
+                    }
+                    .font(.system(size: 20, weight: .semibold))
+                    .frame(width: 50, height: 50)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                      RoundedRectangle(cornerRadius: 8)
+                        .stroke(captionBG == option ? Color.accentColor : Color.gray.opacity(0.3), lineWidth: captionBG == option ? 2 : 1)
+                    )
 
-// MARK: - Caption BG Grid
-private struct CaptionBackgroundGrid: View {
-  @Binding var selection: AppearanceView.CaptionBG
-
-  var body: some View {
-    HStack(spacing: 8) {
-      bgItem(style: .black)  { previewSquare(bg: .black, fg: .white, label: "가") }
-      bgItem(style: .white)  { previewSquare(bg: .white, fg: .black, label: "가") }
-      bgItem(style: .clear)  { previewSquare(bg: .clear, fg: .gray.opacity(0.7), label: "가").overlay(MaterialBorder()) }
-      bgItem(style: .custom) {
-        ZStack {
-          Circle().fill(Color.pink).frame(width: 20).offset(x: -8, y: -8).opacity(0.85)
-          Circle().fill(Color.cyan).frame(width: 22).offset(x: -12, y: 12).opacity(0.9)
-          Circle().fill(Color.yellow).frame(width: 22).offset(x: 14, y: 2).opacity(0.9)
-          Text("가").font(.system(size: 32, weight: .semibold))
-            .foregroundStyle(.primary)
+                    Text(option.rawValue)
+                      .font(.system(size: 10))
+                      .foregroundStyle(.secondary)
+                  }
+                }
+                .buttonStyle(.plain)
+              }
+            }
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+          }
         }
-        .frame(width: 64, height: 64)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .formStyle(.grouped)
+        .padding(.horizontal, -24)
+        .padding(.vertical, -24)
       }
+      .padding(.top, -24)
     }
-    .padding(6)
-  }
-
-  @ViewBuilder
-  private func bgItem(style: AppearanceView.CaptionBG, @ViewBuilder content: () -> some View) -> some View {
-    let isSelected = selection == style
-    Button {
-      selection = style
-    } label: {
-      VStack(spacing: 6) {
-        content()
-          .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-              .stroke(isSelected ? Color.accentColor.opacity(0.9) : Color.clear, lineWidth: 2.5)
-          )
-          .scaleEffect(isSelected ? 1.02 : 1.0)
-        Text(style.rawValue)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-      }
-      .frame(maxWidth: .infinity)
-      .padding(2)
-    }
-    .buttonStyle(.plain)
-  }
-
-  private func previewSquare(bg: Color, fg: Color, label: String) -> some View {
-    ZStack {
-      bg
-      Text(label).font(.system(size: 32, weight: .semibold)).foregroundStyle(fg)
-    }
-    .frame(width: 64, height: 64)
-    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-    .overlay(MaterialBorder())
-  }
-}
-
-// MARK: - Helpers
-private struct SectionHeader: View {
-  let title: String
-  init(_ title: String) { self.title = title }
-  var body: some View {
-    Text(title)
-      .font(.headline)
-      .foregroundStyle(.secondary)
-      .padding(.horizontal, 4)
-  }
-}
-
-private struct MaterialBorder: View {
-  var body: some View {
-    RoundedRectangle(cornerRadius: 12, style: .continuous)
-      .strokeBorder(.white.opacity(0.15), lineWidth: 1)
-      .shadow(color: .black.opacity(0.05), radius: 1, x: 0, y: 1)
-  }
-}
-
-private extension View {
-  func cardBackground() -> some View {
-    self
-      .padding(10)
-      .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-      .overlay(
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-          .stroke(.white.opacity(0.25), lineWidth: 0.8)
-      )
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
 }
 
