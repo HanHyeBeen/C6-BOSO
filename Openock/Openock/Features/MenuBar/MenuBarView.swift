@@ -33,7 +33,7 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 0) {
           switch tab {
           case .appearance:
-            AppearanceView()
+            AppearanceView(onSelect: {})
 //          case .shortcut:
 //            ShortcutView()
           }

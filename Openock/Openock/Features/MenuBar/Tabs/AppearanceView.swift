@@ -10,6 +10,9 @@ import SwiftUI
 struct AppearanceView: View {
   @EnvironmentObject var settings: SettingsManager
 
+  var onSelect: () -> Void = {}
+  private let fonts = NSFontManager.shared.availableFonts.sorted()
+  
   private let sizeRange: ClosedRange<CGFloat> = 18...64
 
   enum CaptionBG: String, CaseIterable {
@@ -36,41 +39,56 @@ struct AppearanceView: View {
           .font(.system(size: 11))
           .fontWeight(.semibold)
         
-        ScrollView {
-          VStack(alignment: .leading, spacing: 6) {
-            // 시스템 설치 폰트들
-            ForEach(NSFontManager.installedFontNames, id: \.self) { fontName in
-              Button {
-                settings.selectedFont = fontName
-                settings.save()
-              } label: {
-                HStack(spacing: 12) {
-                  Image(systemName: "checkmark")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(settings.selectedFont == fontName ? Color.accentColor : Color.clear)
-                    .frame(width: 16)
-                  
-                  Text("이것은 \(fontName) 입니다.")
-                    .font(Font.custom(fontName, size: 13))
-                    .foregroundStyle(.primary)
-                  
-                  Spacer()
+        ScrollViewReader { proxy in
+          ScrollView {
+            VStack(alignment: .leading, spacing: 6) {
+              // 시스템 설치 폰트들
+              ForEach(NSFontManager.installedFontNames, id: \.self) { fontName in
+                Button {
+                  settings.selectedFont = fontName
+                  settings.save()
+                  onSelect()
+                  withAnimation(.easeInOut) {
+                    proxy.scrollTo(fontName, anchor: .center)
+                  }
+                } label: {
+                  HStack(spacing: 12) {
+                    Image(systemName: "checkmark")
+                      .font(.system(size: 13, weight: .semibold))
+                      .foregroundStyle(settings.selectedFont == fontName ? Color.accentColor : Color.clear)
+                      .frame(width: 16)
+                    
+                    Text("이것은 \(fontName) 입니다.")
+                      .font(Font.custom(fontName, size: 13))
+                      .foregroundStyle(.primary)
+                    
+                    Spacer()
+                  }
+                  .padding(.vertical, 6)
+                  .contentShape(Rectangle())
                 }
-                .padding(.vertical, 6)
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+                .id(fontName)
               }
-              .buttonStyle(.plain)
+            }
+            .padding(16)
+            .background(Color(NSColor.quaternaryLabelColor).opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+              RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(NSColor.separatorColor), lineWidth: 0.5)
+            )
+          }
+          .frame(maxHeight: 200)
+          .onAppear {
+            // ✅ 설정창을 다시 열면, 선택된 폰트가 보이게 스크롤 이동
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+              withAnimation(.easeInOut(duration: 0.4)) {
+                proxy.scrollTo(settings.selectedFont, anchor: .center)
+              }
             }
           }
-          .padding(16)
-          .background(Color(NSColor.quaternaryLabelColor).opacity(0.1))
-          .clipShape(RoundedRectangle(cornerRadius: 8))
-          .overlay(
-            RoundedRectangle(cornerRadius: 8)
-              .stroke(Color(NSColor.separatorColor), lineWidth: 0.5)
-          )
         }
-        .frame(maxHeight: 200)
       }
 
       // 크기
