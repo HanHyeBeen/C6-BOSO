@@ -112,18 +112,18 @@ struct STTView: View {
             .padding(.bottom, 20)
           }
         }
-        .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
-          toggleWindowHeight()
-        }
-        .onAppear {
-          sttEngine.setupSystemCapture { success in
-            if success {
-              sttEngine.startRecording()
-            } else {
-              print("Error")
-            }
-          }
+      }
+    }
+    .contentShape(Rectangle())
+    .onTapGesture(count: 2) {
+      toggleWindowHeight()
+    }
+    .onAppear {
+      sttEngine.setupSystemCapture { success in
+        if success {
+          sttEngine.startRecording()
+        } else {
+          print("Error")
         }
       }
     }
