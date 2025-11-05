@@ -23,41 +23,64 @@ class STTTranscriberManager: ObservableObject {
 
   @Published var transcript = ""
   @Published var errorMessage: String?
+  @Published var detectedLanguage: String = "ko-KR"  // 현재 감지된 언어
 
-  private var transcriber: SpeechTranscriber?
-  private var analyzer: SpeechAnalyzer?
-  private var inputContinuation: AsyncStream<AnalyzerInput>.Continuation?
+  // Dual transcriber setup (Korean + English)
+  private var koTranscriber: SpeechTranscriber?
+  private var enTranscriber: SpeechTranscriber?
+  private var koAnalyzer: SpeechAnalyzer?
+  private var enAnalyzer: SpeechAnalyzer?
+  private var koInputContinuation: AsyncStream<AnalyzerInput>.Continuation?
+  private var enInputContinuation: AsyncStream<AnalyzerInput>.Continuation?
   private var analyzerFormat: AVAudioFormat?
   private var converter: AVAudioConverter?
 
   @Published var isTranscribing = false
 
-  // Foundation Models for text improvement
+  // Foundation Models for text improvement --------------------------------------------------------------
   private var enableAIImprovement = true
-  private var debugMode = true  // 디버그 모드: STT 원본도 함께 표시
+  private var debugMode = false  // 디버그 모드: STT 원본도 함께 표시
+
+
   private var recentContextSentences: [String] = []  // 최근 문장들 (맥락용)
   private let maxContextSentences = 5  // 최대 5개 문장 유지 (더 많은 맥락)
+
+  // Language detection --------------------------------------------------------------
+  private var languageDetectionEnabled = true  // 자동 언어 감지 활성화
 
   /// Start the transcription process
   @MainActor
   func startTranscription() async {
-    print("🔄 [STTTranscriberManager] Starting transcription...")
+    print("🔄 [STTTranscriberManager] Starting dual-language transcription...")
 
-    // Create SpeechTranscriber
-    transcriber = SpeechTranscriber(
+    // Create Korean SpeechTranscriber
+    koTranscriber = SpeechTranscriber(
         locale: Locale(identifier: "ko-KR"),
         preset: .progressiveTranscription
     )
-    print("✅ [STTTranscriberManager] SpeechTranscriber created")
+    print("✅ [STTTranscriberManager] Korean transcriber created")
 
-    guard let transcriber = transcriber else {
-      print("❌ [STTTranscriberManager] No transcriber available")
+    // Create English SpeechTranscriber
+    enTranscriber = SpeechTranscriber(
+        locale: Locale(identifier: "en-US"),
+        preset: .progressiveTranscription
+    )
+    print("✅ [STTTranscriberManager] English transcriber created")
+
+    guard let koTranscriber = koTranscriber, let enTranscriber = enTranscriber else {
+      print("❌ [STTTranscriberManager] Failed to create transcribers")
       return
     }
 
-    // Assets
-    if let installationRequest = try? await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
-        try? await installationRequest.downloadAndInstall()
+    // Download assets for both languages
+    if let koInstallRequest = try? await AssetInventory.assetInstallationRequest(supporting: [koTranscriber]) {
+        try? await koInstallRequest.downloadAndInstall()
+        print("✅ [STTTranscriberManager] Korean assets downloaded")
+    }
+
+    if let enInstallRequest = try? await AssetInventory.assetInstallationRequest(supporting: [enTranscriber]) {
+        try? await enInstallRequest.downloadAndInstall()
+        print("✅ [STTTranscriberManager] English assets downloaded")
     }
 
     // Initialize Foundation Models for AI text improvement
@@ -71,11 +94,14 @@ class STTTranscriberManager: ObservableObject {
       }
     }
 
-    // Set up analyzer pipeline
-    let analyzer = SpeechAnalyzer(modules: [transcriber])
-    self.analyzer = analyzer
+    // Set up analyzer pipelines for both languages
+    let koAnalyzer = SpeechAnalyzer(modules: [koTranscriber])
+    let enAnalyzer = SpeechAnalyzer(modules: [enTranscriber])
+    self.koAnalyzer = koAnalyzer
+    self.enAnalyzer = enAnalyzer
 
-    let bestFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
+    // Get best format compatible with both transcribers
+    let bestFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [koTranscriber, enTranscriber])
     self.analyzerFormat = bestFormat
 
     if let bestFormat = bestFormat {
@@ -84,31 +110,303 @@ class STTTranscriberManager: ObservableObject {
       print("⚠️ [STTTranscriberManager] No best format available")
     }
 
-    // Create AsyncStream
-    let (inputSequence, inputBuilder) = AsyncStream.makeStream(of: AnalyzerInput.self)
-    self.inputContinuation = inputBuilder
+    // Create AsyncStreams for both languages
+    let (koInputSequence, koInputBuilder) = AsyncStream.makeStream(of: AnalyzerInput.self)
+    let (enInputSequence, enInputBuilder) = AsyncStream.makeStream(of: AnalyzerInput.self)
+    self.koInputContinuation = koInputBuilder
+    self.enInputContinuation = enInputBuilder
 
-    // Start analyzer
+    // Start both analyzers
     Task {
-      print("🔄 [STTTranscriberManager] Starting analyzer...")
+      print("🔄 [STTTranscriberManager] Starting Korean analyzer...")
       do {
-        try await analyzer.start(inputSequence: inputSequence)
-        print("✅ [STTTranscriberManager] Analyzer started")
+        try await koAnalyzer.start(inputSequence: koInputSequence)
+        print("✅ [STTTranscriberManager] Korean analyzer started")
       } catch {
-        print("❌ [STTTranscriberManager] Analyzer start error: \(error)")
+        print("❌ [STTTranscriberManager] Korean analyzer start error: \(error)")
       }
     }
 
-    // Process transcription results in background
-    isTranscribing = true
     Task {
-      await processTranscriptionResults(transcriber: transcriber)
+      print("🔄 [STTTranscriberManager] Starting English analyzer...")
+      do {
+        try await enAnalyzer.start(inputSequence: enInputSequence)
+        print("✅ [STTTranscriberManager] English analyzer started")
+      } catch {
+        print("❌ [STTTranscriberManager] English analyzer start error: \(error)")
+      }
     }
 
-    print("✅ [STTTranscriberManager] Transcription started (background processing)")
+    // Process transcription results from both transcribers in background
+    isTranscribing = true
+    Task {
+      await processDualTranscriptionResults(koTranscriber: koTranscriber, enTranscriber: enTranscriber)
+    }
+
+    print("✅ [STTTranscriberManager] Dual-language transcription started (background processing)")
   }
 
-  /// Process transcription results from SpeechTranscriber
+  /// Process dual transcription results from both Korean and English transcribers
+  @MainActor
+  private func processDualTranscriptionResults(koTranscriber: SpeechTranscriber, enTranscriber: SpeechTranscriber) async {
+    var finalized = AttributedString("")
+    var volatile = AttributedString("")
+
+    print("🔄 [STTTranscriberManager] Starting dual transcription result processing...")
+
+    // Shared actor to coordinate results
+    let resultCoordinator = ResultCoordinator()
+
+    do {
+      // Process both transcribers concurrently - event-driven
+      await withTaskGroup(of: Void.self) { group in
+        // Korean transcriber task - process immediately when result arrives
+        group.addTask { @MainActor in
+          do {
+            for try await result in koTranscriber.results {
+              print("🇰🇷 [Korean] Result - isFinal: \(result.isFinal), text: '\(String(result.text.characters))'")
+
+              await resultCoordinator.updateKorean(text: result.text, isFinal: result.isFinal)
+
+              // Immediately process
+              if await self.processCombinedResults(
+                coordinator: resultCoordinator,
+                finalized: &finalized,
+                volatile: &volatile
+              ) {
+                let newTranscript = String(finalized.characters) + String(volatile.characters)
+                self.objectWillChange.send()
+                self.transcript = newTranscript
+              }
+            }
+          } catch {
+            print("❌ [Korean] Transcription error: \(error)")
+          }
+        }
+
+        // English transcriber task - process immediately when result arrives
+        group.addTask { @MainActor in
+          do {
+            for try await result in enTranscriber.results {
+              print("🇺🇸 [English] Result - isFinal: \(result.isFinal), text: '\(String(result.text.characters))'")
+
+              await resultCoordinator.updateEnglish(text: result.text, isFinal: result.isFinal)
+
+              // Immediately process
+              if await self.processCombinedResults(
+                coordinator: resultCoordinator,
+                finalized: &finalized,
+                volatile: &volatile
+              ) {
+                let newTranscript = String(finalized.characters) + String(volatile.characters)
+                self.objectWillChange.send()
+                self.transcript = newTranscript
+              }
+            }
+          } catch {
+            print("❌ [English] Transcription error: \(error)")
+          }
+        }
+      }
+    } catch {
+      print("❌ Dual transcription error: \(error)")
+      self.errorMessage = "전사 오류: \(error.localizedDescription)"
+    }
+
+    isTranscribing = false
+  }
+
+  /// Process combined results from both transcribers
+  @MainActor
+  private func processCombinedResults(
+    coordinator: ResultCoordinator,
+    finalized: inout AttributedString,
+    volatile: inout AttributedString
+  ) async -> Bool {
+    let ko = await coordinator.korean
+    let en = await coordinator.english
+
+    guard let selectedResult = await selectBestResult(koResult: ko, enResult: en) else {
+      return false
+    }
+
+    if selectedResult.isFinal {
+      // Prevent duplicate final processing
+      guard await coordinator.shouldProcessFinal() else {
+        print("⏭️ Skipping duplicate final result")
+        return false
+      }
+      let originalText = String(selectedResult.text.characters).trimmingCharacters(in: .whitespacesAndNewlines)
+      let detectedLang = selectedResult.language
+
+      print("🎯 [Selected \(detectedLang)] STT 원본: '\(originalText)'")
+      self.detectedLanguage = detectedLang
+
+      // AI improvement
+      let rawImprovedText: String
+      if #available(macOS 15.1, *), self.enableAIImprovement, !originalText.isEmpty {
+        rawImprovedText = await self.withTimeout(seconds: 5) {
+          do {
+            let contextString = self.recentContextSentences.isEmpty ? nil : self.recentContextSentences.joined(separator: " ")
+            return try await STTFoundationModels.shared.improveText(originalText, previousContext: contextString, language: detectedLang)
+          } catch {
+            print("⚠️ AI improvement failed: \(error)")
+            return originalText
+          }
+        } ?? originalText
+      } else {
+        rawImprovedText = originalText
+      }
+
+      let improvedText = rawImprovedText.trimmingCharacters(in: .whitespacesAndNewlines)
+      let hasChanged = originalText != improvedText
+
+      if hasChanged {
+        print("✨ AI 교정: '\(originalText)' → '\(improvedText)'")
+      } else {
+        print("✅ AI 판단: 수정 불필요")
+      }
+
+      // Display with language indicator
+      if self.debugMode && hasChanged {
+        finalized += AttributedString("[\(detectedLang == "ko-KR" ? "🇰🇷" : "🇺🇸") 원본: \(originalText)] \(improvedText)\n")
+      } else {
+        finalized += AttributedString(improvedText)
+      }
+
+      self.recentContextSentences.append(improvedText)
+      if self.recentContextSentences.count > self.maxContextSentences {
+        self.recentContextSentences.removeFirst()
+      }
+
+      volatile = AttributedString("")
+
+      // Clear processed results
+      await coordinator.clearBoth()
+
+    } else {
+      // Partial result
+      volatile = selectedResult.text
+      print("⏳ Partial (\(selectedResult.language)): '\(String(selectedResult.text.characters))'")
+    }
+
+    return true
+  }
+
+  // Result coordinator actor to safely share state between tasks
+  actor ResultCoordinator {
+    var korean: (text: AttributedString, isFinal: Bool)?
+    var english: (text: AttributedString, isFinal: Bool)?
+    private var lastProcessedFinalTimestamp: Date?
+    private var processingFinal = false  // Prevent duplicate final processing
+
+    func updateKorean(text: AttributedString, isFinal: Bool) {
+      korean = (text: text, isFinal: isFinal)
+    }
+
+    func updateEnglish(text: AttributedString, isFinal: Bool) {
+      english = (text: text, isFinal: isFinal)
+    }
+
+    func shouldProcessFinal() -> Bool {
+      // If already processing a final result, skip
+      if processingFinal {
+        return false
+      }
+
+      // Check if either has a final result
+      let koFinal = korean?.isFinal ?? false
+      let enFinal = english?.isFinal ?? false
+
+      if koFinal || enFinal {
+        processingFinal = true
+        return true
+      }
+
+      return false
+    }
+
+    func clearBoth() {
+      korean = nil
+      english = nil
+      processingFinal = false
+      lastProcessedFinalTimestamp = Date()
+    }
+  }
+
+  /// Select best result between Korean and English transcriptions
+  private func selectBestResult(koResult: (text: AttributedString, isFinal: Bool)?, enResult: (text: AttributedString, isFinal: Bool)?) -> (text: AttributedString, isFinal: Bool, language: String)? {
+    guard languageDetectionEnabled else {
+      // If detection disabled, prefer Korean
+      if let ko = koResult {
+        return (ko.text, ko.isFinal, "ko-KR")
+      }
+      return nil
+    }
+
+    // If only one has result, use that
+    if koResult == nil, let en = enResult {
+      return (en.text, en.isFinal, "en-US")
+    }
+    if let ko = koResult, enResult == nil {
+      return (ko.text, ko.isFinal, "ko-KR")
+    }
+
+    guard let ko = koResult, let en = enResult else {
+      return nil
+    }
+
+    let koText = String(ko.text.characters).trimmingCharacters(in: .whitespacesAndNewlines)
+    let enText = String(en.text.characters).trimmingCharacters(in: .whitespacesAndNewlines)
+
+    // If one is empty, use the other
+    if koText.isEmpty && !enText.isEmpty {
+      return (en.text, en.isFinal, "en-US")
+    }
+    if !koText.isEmpty && enText.isEmpty {
+      return (ko.text, ko.isFinal, "ko-KR")
+    }
+
+    // Both have text - compare by length (longer usually means more confident)
+    let koLength = koText.count
+    let enLength = enText.count
+
+    // If one is significantly longer (>30% difference), prefer that
+    let lengthRatio = Double(max(koLength, enLength)) / Double(max(min(koLength, enLength), 1))
+
+    if lengthRatio > 1.3 {
+      if koLength > enLength {
+        print("🎯 [Detection] Selected Korean (length: \(koLength) vs \(enLength))")
+        return (ko.text, ko.isFinal, "ko-KR")
+      } else {
+        print("🎯 [Detection] Selected English (length: \(enLength) vs \(koLength))")
+        return (en.text, en.isFinal, "en-US")
+      }
+    }
+
+    // If lengths similar, use heuristic: check for ASCII/Korean characters
+    let koHasKorean = koText.contains(where: { char in
+      let scalar = char.unicodeScalars.first
+      return scalar.map { (0xAC00...0xD7A3).contains($0.value) } ?? false
+    })
+
+    let enHasKorean = enText.contains(where: { char in
+      let scalar = char.unicodeScalars.first
+      return scalar.map { (0xAC00...0xD7A3).contains($0.value) } ?? false
+    })
+
+    // Prefer Korean transcriber if Korean characters detected in either
+    if koHasKorean {
+      print("🎯 [Detection] Selected Korean (Korean chars detected)")
+      return (ko.text, ko.isFinal, "ko-KR")
+    }
+
+    // Otherwise prefer English
+    print("🎯 [Detection] Selected English (no Korean chars)")
+    return (en.text, en.isFinal, "en-US")
+  }
+
+  /// Process transcription results from SpeechTranscriber (legacy, kept for reference)
   @MainActor
   private func processTranscriptionResults(transcriber: SpeechTranscriber) async {
     var finalized = AttributedString("")
@@ -275,21 +573,29 @@ class STTTranscriberManager: ObservableObject {
       sendBuffer = buffer
     }
 
-    // Send to analyzer
-    inputContinuation?.yield(AnalyzerInput(buffer: sendBuffer))
-    print("✅ [STTTranscriberManager] Audio buffer sent to analyzer (\(sendBuffer.frameLength) frames)")
+    // Send to both analyzers
+    koInputContinuation?.yield(AnalyzerInput(buffer: sendBuffer))
+    enInputContinuation?.yield(AnalyzerInput(buffer: sendBuffer))
+    print("✅ [STTTranscriberManager] Audio buffer sent to both analyzers (\(sendBuffer.frameLength) frames)")
   }
 
   /// Stop transcription
   func stopTranscription() {
-    print("🛑 [STTTranscriberManager] Stopping transcription...")
+    print("🛑 [STTTranscriberManager] Stopping dual transcription...")
 
-    inputContinuation?.finish()
-    inputContinuation = nil
-    analyzer = nil
+    // Finish both input streams
+    koInputContinuation?.finish()
+    enInputContinuation?.finish()
+
+    // Clear all resources
+    koInputContinuation = nil
+    enInputContinuation = nil
+    koAnalyzer = nil
+    enAnalyzer = nil
     analyzerFormat = nil
     converter = nil
-    transcriber = nil
+    koTranscriber = nil
+    enTranscriber = nil
     isTranscribing = false
     recentContextSentences.removeAll()
 
@@ -298,7 +604,7 @@ class STTTranscriberManager: ObservableObject {
       STTFoundationModels.shared.cleanup()
     }
 
-    print("✅ [STTTranscriberManager] Transcription stopped")
+    print("✅ [STTTranscriberManager] Dual transcription stopped")
   }
 
   /// Clear transcript
@@ -318,6 +624,12 @@ class STTTranscriberManager: ObservableObject {
   func setDebugMode(enabled: Bool) {
     debugMode = enabled
     print("🔧 [STTTranscriberManager] Debug mode \(enabled ? "enabled" : "disabled")")
+  }
+
+  /// 자동 언어 감지 켜기/끄기
+  func setLanguageDetection(enabled: Bool) {
+    languageDetectionEnabled = enabled
+    print("🔧 [STTTranscriberManager] Language detection \(enabled ? "enabled (auto)" : "disabled (Korean only)")")
   }
 
   deinit {
