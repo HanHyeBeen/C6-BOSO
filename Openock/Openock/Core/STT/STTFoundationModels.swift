@@ -168,8 +168,9 @@ class STTFoundationModels {
     /// - Parameters:
     ///   - text: Original STT transcription text
     ///   - previousContext: Previous finalized text for better context (optional)
+    ///   - language: Language code (e.g., "ko-KR", "en-US") for language-specific corrections
     /// - Returns: Improved text
-    func improveText(_ text: String, previousContext: String? = nil) async throws -> String {
+    func improveText(_ text: String, previousContext: String? = nil, language: String = "ko-KR") async throws -> String {
         guard !text.isEmpty else { return text }
 
         // Initialize session if needed
@@ -187,7 +188,7 @@ class STTFoundationModels {
         }
 
         // Build prompt
-        let prompt = buildPrompt(for: text, context: previousContext)
+        let prompt = buildPrompt(for: text, context: previousContext, language: language)
         print("📝 [STTFoundationModels] Prompt:\n\(prompt)\n")
 
         do {
@@ -268,21 +269,38 @@ class STTFoundationModels {
     }
 
     /// Build prompt for text improvement
-    private func buildPrompt(for text: String, context: String?) -> String {
+    private func buildPrompt(for text: String, context: String?, language: String = "ko-KR") -> String {
         var prompt = ""
 
-        if let context = context, !context.isEmpty {
-            prompt += "=== 이전 대화 (참고용) ===\n\(context)\n\n"
-        } else {
-            prompt += "=== 이전 대화 ===\n(없음)\n\n"
-        }
+        if language.starts(with: "en") {
+            // English prompt
+            if let context = context, !context.isEmpty {
+                prompt += "=== Previous Context (Reference) ===\n\(context)\n\n"
+            } else {
+                prompt += "=== Previous Context ===\n(None)\n\n"
+            }
 
-        prompt += "=== 음성인식 결과 ===\n\(text)\n\n"
-        prompt += "=== 작업 ===\n"
-        prompt += "1. 명백한 STT 오류만 찾기 (무의미한 음절, 명백한 고유명사 오타)\n"
-        prompt += "2. 불확실하면 수정하지 말 것\n"
-        prompt += "3. 수정된 텍스트만 출력 (설명 없이, 수정 없으면 원본 그대로)\n\n"
-        prompt += "텍스트:"
+            prompt += "=== Speech Recognition Result ===\n\(text)\n\n"
+            prompt += "=== Task ===\n"
+            prompt += "1. Find ONLY obvious STT errors (nonsense syllables, clear proper noun typos)\n"
+            prompt += "2. If uncertain, DO NOT modify\n"
+            prompt += "3. Output corrected text only (no explanation, if no correction needed, return original)\n\n"
+            prompt += "Text:"
+        } else {
+            // Korean prompt
+            if let context = context, !context.isEmpty {
+                prompt += "=== 이전 대화 (참고용) ===\n\(context)\n\n"
+            } else {
+                prompt += "=== 이전 대화 ===\n(없음)\n\n"
+            }
+
+            prompt += "=== 음성인식 결과 ===\n\(text)\n\n"
+            prompt += "=== 작업 ===\n"
+            prompt += "1. 명백한 STT 오류만 찾기 (무의미한 음절, 명백한 고유명사 오타)\n"
+            prompt += "2. 불확실하면 수정하지 말 것\n"
+            prompt += "3. 수정된 텍스트만 출력 (설명 없이, 수정 없으면 원본 그대로)\n\n"
+            prompt += "텍스트:"
+        }
 
         return prompt
     }
