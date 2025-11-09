@@ -20,6 +20,7 @@ struct STTView: View {
   @State private var lastHeightUpdate = Date.distantPast
   @State private var resizeDelegate = WindowResizeDelegate()
   @State private var titlebarColorView: NSView?
+  @State private var hoverStateTimer: Timer?  // hover 상태 유지 타이머 (3초)
 
   private let lineSpacing: CGFloat = 4
   private let controlHeight: CGFloat = 50
@@ -104,7 +105,7 @@ struct STTView: View {
     w.contentMaxSize = NSSize(width: 10000, height: desiredContentHeight)
   }
 
-  private func throttledUpdateWindowHeight(minInterval: TimeInterval = 0.12) {
+  private func throttledUpdateWindowHeight(minInterval: TimeInterval = 0.05) {
     let now = Date()
     if now.timeIntervalSince(lastHeightUpdate) >= minInterval {
       lastHeightUpdate = now
@@ -226,20 +227,27 @@ struct STTView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .contentShape(Rectangle())
     .onHover { hovering in
-      isHovering = hovering
-      // 재생 중일 때만 컨트롤 표시 상태가 바뀌므로 높이 업데이트
-      if !pipeline.isPaused {
-        withAnimation(.easeInOut(duration: 0.2)) {
-          // "controlsVisible"는 계산 프로퍼티이므로 여기서는 높이만 갱신
+      if hovering {
+        // 마우스가 들어옴 -> 즉시 hover 상태로 변경
+        hoverStateTimer?.invalidate()  // 진행 중인 타이머 취소
+        isHovering = true
+        if !pipeline.isPaused {
           throttledUpdateWindowHeight()
+        }
+      } else {
+        // 마우스가 벗어남 -> 3초 후 숨김
+        hoverStateTimer?.invalidate()
+        hoverStateTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { _ in
+          self.isHovering = false
+          if !pipeline.isPaused {
+            throttledUpdateWindowHeight()
+          }
         }
       }
     }
     .onChange(of: appDelegate.windowDidBecomeKey) {
       if appDelegate.windowDidBecomeKey {
-        withAnimation(.easeInOut(duration: 0.2)) {
-          throttledUpdateWindowHeight()
-        }
+        throttledUpdateWindowHeight()
         DispatchQueue.main.async { appDelegate.windowDidBecomeKey = false }
       }
     }
@@ -276,6 +284,8 @@ struct STTView: View {
     .onDisappear {
       textHideTimer?.invalidate()
       textHideTimer = nil
+      hoverStateTimer?.invalidate()
+      hoverStateTimer = nil
     }
     .background(
       WindowAccessor { win in
