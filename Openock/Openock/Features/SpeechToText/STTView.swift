@@ -124,13 +124,11 @@ struct STTView: View {
       print("⏰ Timer fired - hiding text area")
       print("   showTextArea before: \(self.showTextArea)")
 
-      // 텍스트 영역 숨김
-      withAnimation(.easeInOut(duration: 0.3)) {
-        self.showTextArea = false
-      }
+      // 텍스트 영역 숨김 (애니메이션 없이 즉시)
+      self.showTextArea = false
       print("   showTextArea after: \(self.showTextArea)")
 
-      // 창 높이 업데이트 (애니메이션 시작과 동시에)
+      // 창 높이 즉시 갱신
       print("   Updating window height...")
       self.updateWindowHeight()
     }
@@ -179,7 +177,6 @@ struct STTView: View {
             }
             .frame(height: controlHeight)
             .frame(maxWidth: .infinity)
-            .transition(.move(edge: .top).combined(with: .opacity))
             .allowsHitTesting(true)
             .zIndex(10)
           }
@@ -224,7 +221,7 @@ struct STTView: View {
           }
       }
       .frame(maxWidth: .infinity)
-      .frame(maxHeight: .infinity, alignment: .bottom)
+      .frame(maxHeight: .infinity, alignment: .top)
     }
     .contentShape(Rectangle())
     .onHover { hovering in
