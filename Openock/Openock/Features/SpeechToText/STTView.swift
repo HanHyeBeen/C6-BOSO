@@ -1,6 +1,14 @@
 import SwiftUI
 import AVFoundation
 
+// 창 높이 조절 방지를 위한 Delegate
+private final class WindowResizeDelegate: NSObject, NSWindowDelegate {
+  func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
+    // 높이는 현재 높이로 고정, 가로만 조절 가능
+    return NSSize(width: frameSize.width, height: sender.frame.height)
+  }
+}
+
 struct STTView: View {
   @EnvironmentObject var pipeline: AudioPipeline
   @EnvironmentObject var settings: SettingsManager
@@ -10,13 +18,24 @@ struct STTView: View {
   @State private var textHideTimer: Timer?
   @State private var isHovering = false
   @State private var lastHeightUpdate = Date.distantPast
+  @State private var resizeDelegate = WindowResizeDelegate()
 
   private let lineSpacing: CGFloat = 4
   private let controlHeight: CGFloat = 50
 
-  // 텍스트 2줄 높이 계산 (기본 높이)
+  // 텍스트 2줄에 필요한 높이 계산 (폰트 크기에 따라 동적)
   private func baseTextAreaHeight() -> CGFloat {
-    return 70
+    let fontName = settings.selectedFont
+    let fontSize = CGFloat(settings.fontSize)
+    let font = NSFont(name: fontName, size: fontSize) ?? NSFont.systemFont(ofSize: fontSize)
+
+    // 한 줄의 높이 = ascender - descender + leading
+    let lineHeight = ceil(font.ascender - font.descender + font.leading)
+
+    // 2줄 + 줄간격(lineSpacing 1번) + vertical padding(상하 12씩 총 24)
+    let textHeight = (lineHeight * 2) + lineSpacing + 24
+
+    return max(textHeight, 50) // 최소 높이 보장
   }
 
   // 전체 창 높이 계산 (콘텐츠 기준; 타이틀바는 항상 노출)
@@ -264,6 +283,9 @@ struct STTView: View {
       WindowAccessor { win in
         self.window = win
         if let w = win {
+          // Delegate 설정으로 높이 조절 방지
+          w.delegate = resizeDelegate
+
           w.titleVisibility = .hidden
           w.titlebarAppearsTransparent = true
           w.title = ""
