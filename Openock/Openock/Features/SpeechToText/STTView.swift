@@ -19,6 +19,7 @@ struct STTView: View {
   @State private var isHovering = false
   @State private var lastHeightUpdate = Date.distantPast
   @State private var resizeDelegate = WindowResizeDelegate()
+  @State private var titlebarColorView: NSView?
 
   private let lineSpacing: CGFloat = 4
   private let controlHeight: CGFloat = 50
@@ -138,12 +139,11 @@ struct STTView: View {
     let controlsVisible = pipeline.isPaused || isHovering
     let textVisible = pipeline.isPaused ? showTextArea : true
 
-    ZStack {
-      // 배경색을 ZStack 최하위에 배치하고 ignoresSafeArea로 타이틀바까지 적용
+    ZStack(alignment: .top) {
+      // 배경색을 가장 먼저 배치
       settings.backgroundColor
-        .id(settings.selectedBackground)
-        .ignoresSafeArea()
-        .animation(.easeInOut(duration: 0.25), value: settings.selectedBackground)
+        .glassEffect(.clear, in: .rect)
+        .ignoresSafeArea(.all)
 
       VStack(spacing: 0) {
           // 컨트롤 영역 (상단)
@@ -223,6 +223,7 @@ struct STTView: View {
       .frame(maxWidth: .infinity)
       .frame(maxHeight: .infinity, alignment: .top)
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .contentShape(Rectangle())
     .onHover { hovering in
       isHovering = hovering
@@ -280,18 +281,18 @@ struct STTView: View {
       WindowAccessor { win in
         self.window = win
         if let w = win {
+          print("🪟 WindowAccessor: Setting up window")
+
           // Delegate 설정으로 높이 조절 방지
           w.delegate = resizeDelegate
 
-          w.titleVisibility = .hidden
-          w.titlebarAppearsTransparent = true
-          w.title = ""
-          w.styleMask.insert(.fullSizeContentView)
-          w.titlebarSeparatorStyle = .none
+          // Liquid Glass 효과 적용
+          w.applyLiquidGlass()
+
           w.isMovableByWindowBackground = true
           w.toolbar = nil
-          w.backgroundColor = .clear
-          w.isOpaque = false
+
+          print("✅ Window setup complete - fullSizeContentView: \(w.styleMask.contains(.fullSizeContentView))")
 
           w.contentResizeIncrements = NSSize(width: 1, height: 1)
           w.contentMinSize = NSSize(width: 200, height: 1)

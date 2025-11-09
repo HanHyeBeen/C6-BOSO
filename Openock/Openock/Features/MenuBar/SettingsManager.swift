@@ -23,21 +23,21 @@ final class SettingsManager: ObservableObject {
   // MARK: - Derived color properties
   var backgroundColor: Color {
     switch selectedBackground {
-    case "블랙": return .black
-    case "화이트": return .white
-    case "투명": return .clear
-    case "커스텀": return Color.pink.opacity(0.2)
-    default: return .clear
+    case "블랙", "black": return .black
+    case "화이트", "white": return .white
+    case "투명", "clear": return .clear
+    case "커스텀", "custom": return Color.pink.opacity(0.2)
+    default: return .black  // 기본값을 블랙으로 변경
     }
   }
-  
+
   var textColor: Color {
     switch selectedBackground {
-    case "블랙": return .white
-    case "화이트": return .black
-    case "투명": return .gray
-    case "커스텀": return .red
-    default: return .primary
+    case "블랙", "black": return .white
+    case "화이트", "white": return .black
+    case "투명", "clear": return .gray
+    case "커스텀", "custom": return .red
+    default: return .white  // 기본 배경이 블랙이므로 텍스트는 화이트
     }
   }
   

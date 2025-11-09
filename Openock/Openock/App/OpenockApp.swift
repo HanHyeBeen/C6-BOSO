@@ -12,7 +12,7 @@ struct OpenockApp: App {
   @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
   @StateObject private var pipeline = AudioPipeline()
   @StateObject private var settings  = SettingsManager()
-
+  
   var body: some Scene {
     WindowGroup {
       STTView()
@@ -21,9 +21,10 @@ struct OpenockApp: App {
         .environmentObject(settings)
         .environmentObject(appDelegate)
     }
-    // .windowStyle(.hiddenTitleBar)
-    .defaultSize(width: 800, height: 300)
-
+    .windowStyle(.hiddenTitleBar)
+    .windowToolbarStyle(.unifiedCompact)
+//    .defaultSize(width: 800)
+    
     MenuBarExtra("Openock", systemImage: "character.bubble") {
       MenuBarView()
         .environmentObject(settings)

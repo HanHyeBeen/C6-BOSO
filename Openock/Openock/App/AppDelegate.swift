@@ -14,7 +14,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     NSWindow.allowsAutomaticWindowTabbing = false
-    
+
+    // STTView window에 liquid glass 효과 적용
+    DispatchQueue.main.async {
+      if let window = NSApp.windows.first(where: { $0.title == "" || $0.contentView != nil }) {
+        window.applyLiquidGlass()
+      }
+    }
+
     NotificationCenter.default.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main) { [weak self] _ in
       self?.windowDidBecomeKey = true
     }
