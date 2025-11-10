@@ -1,10 +1,3 @@
-//
-//  STTTextAreaView.swift
-//  Openock
-//
-//  Created by JiJooMaeng on 11/10/25.
-//
-
 import SwiftUI
 
 /// STT 뷰의 텍스트 표시 영역
@@ -32,13 +25,19 @@ struct STTTextAreaView: View {
         GeometryReader { geo in
           VStack(alignment: .center, spacing: 0) {
             Spacer(minLength: 0)
-            Text(pipeline.transcript)
-              .font(Font.custom(settings.selectedFont, size: settings.fontSize))
-              .foregroundStyle(settings.textColor)
-              .lineSpacing(lineSpacing)
-              .multilineTextAlignment(.center)
-              .frame(maxWidth: .infinity)
-              .fixedSize(horizontal: false, vertical: true)
+
+            // ✅ 증가분 tail 스타일을 영구 적용하는 FX 렌더링
+            SubtitleFXView(
+              text: pipeline.transcript,
+              baseFontName: settings.selectedFont,
+              baseFontSize: settings.fontSize,
+              baseColor: settings.textColor,
+              style: pipeline.fxStyle,          // FXEngine이 제공하는 현재 tail 스타일
+              lineSpacing: lineSpacing,
+              textAlignment: .center             // 기존 UI와 동일하게 가운데 정렬
+            )
+            .frame(maxWidth: .infinity)
+            .fixedSize(horizontal: false, vertical: true)
           }
           .frame(width: geo.size.width, height: geo.size.height, alignment: .bottom)
           .clipped()
@@ -49,8 +48,6 @@ struct STTTextAreaView: View {
     .padding(.vertical, 12)
     .frame(height: height)
     .contentShape(Rectangle())
-    .onTapGesture {
-      onTap()
-    }
+    .onTapGesture { onTap() }
   }
 }

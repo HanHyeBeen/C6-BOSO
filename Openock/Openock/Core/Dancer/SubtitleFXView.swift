@@ -11,6 +11,7 @@ public struct SubtitleFXView: View {
     public let baseColor: Color
     public let style: SubtitleStyle          // FXEngine가 계산한 현재 tail 스타일
     public let lineSpacing: CGFloat
+    public let textAlignment: TextAlignment   // ✅ 추가: 정렬 제어 (기본 .leading)
 
     @State private var rendered: AttributedString = .init("") // 누적 결과
     @State private var lastText: String = ""                  // 직전 원문
@@ -21,7 +22,8 @@ public struct SubtitleFXView: View {
         baseFontSize: CGFloat,
         baseColor: Color,
         style: SubtitleStyle,
-        lineSpacing: CGFloat
+        lineSpacing: CGFloat,
+        textAlignment: TextAlignment = .leading
     ) {
         self.text = text
         self.baseFontName = baseFontName
@@ -29,16 +31,26 @@ public struct SubtitleFXView: View {
         self.baseColor = baseColor
         self.style = style
         self.lineSpacing = lineSpacing
+        self.textAlignment = textAlignment
     }
 
     public var body: some View {
         Text(rendered)
             .textSelection(.enabled)
             .lineSpacing(lineSpacing)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .multilineTextAlignment(textAlignment)  // ✅ 적용
+            .frame(maxWidth: .infinity, alignment: frameAlignment(for: textAlignment))
             .fixedSize(horizontal: false, vertical: true)
             .onAppear { applyDiff(newText: text) }
             .onChange(of: text) { applyDiff(newText: $0) }
+    }
+
+    private func frameAlignment(for t: TextAlignment) -> Alignment {
+        switch t {
+        case .center: return .center
+        case .trailing: return .trailing
+        default: return .leading
+        }
     }
 }
 
