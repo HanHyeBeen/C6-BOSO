@@ -153,7 +153,7 @@ struct STTView: View {
               HStack {
                 if pipeline.isPaused {
                   Text("일시정지")
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(settings.textColor)
                     .font(.system(size: 14, weight: .medium))
                 }
               }
@@ -168,7 +168,7 @@ struct STTView: View {
                 }) {
                   Image(systemName: pipeline.isPaused ? "play.fill" : "pause.fill")
                     .font(.system(size: 24))
-                    .foregroundColor(.primary)
+                    .foregroundColor(settings.textColor)
                     .frame(width: 36, height: 36)
                 }
                 .buttonStyle(.plain)
