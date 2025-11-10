@@ -10,18 +10,9 @@ struct STTView: View {
 
   private func toggleWindowHeight() {
     guard let window = NSApp.keyWindow else { return }
-
-    let currentFrame = window.frame
-    let newHeight: CGFloat = isExpanded ? (currentFrame.height / 2) : (currentFrame.height * 2)
-
-    // Keep the bottom position fixed, expand upward
-    let newFrame = NSRect(
-      x: currentFrame.origin.x,
-      y: currentFrame.origin.y,
-      width: currentFrame.width,
-      height: newHeight
-    )
-
+    let current = window.frame
+    let newHeight: CGFloat = isExpanded ? (current.height / 2) : (current.height * 2)
+    let newFrame = NSRect(x: current.origin.x, y: current.origin.y, width: current.width, height: newHeight)
     window.setFrame(newFrame, display: true, animate: true)
     isExpanded.toggle()
   }
@@ -41,32 +32,28 @@ struct STTView: View {
           if pipeline.isRecording {
             if pipeline.isPaused {
               Button(action: { pipeline.resumeRecording() }) {
-                Image(systemName: "play.circle.fill")
-                  .font(.system(size: 28))
+                Image(systemName: "play.circle.fill").font(.system(size: 28))
               }
-              .buttonStyle(.borderless)
-              .tint(.green)
+              .buttonStyle(.borderless).tint(.green)
             } else {
               Button(action: { pipeline.pauseRecording() }) {
-                Image(systemName: "pause.circle.fill")
-                  .font(.system(size: 28))
+                Image(systemName: "pause.circle.fill").font(.system(size: 28))
               }
-              .buttonStyle(.borderless)
-              .tint(.orange)
+              .buttonStyle(.borderless).tint(.orange)
             }
           }
         }
         .padding(.trailing, 10)
         .padding(.top, 10)
 
-        // ✅ YAMNet 상태 한 줄 (HEAD에 추가 반영)
+        // YAMNet 한 줄 상태
         Text(pipeline.yamStatus)
           .font(.caption)
           .foregroundColor(.secondary)
           .padding(.horizontal, 16)
           .frame(maxWidth: .infinity, alignment: .leading)
 
-        // Transcript display - starts from bottom (HEAD 레이아웃 유지)
+        // Transcript
         if pipeline.transcript.isEmpty {
           Spacer()
           VStack(alignment: .center, spacing: 10) {
@@ -83,12 +70,17 @@ struct STTView: View {
           GeometryReader { geometry in
             VStack(alignment: .leading, spacing: 0) {
               Spacer(minLength: 0)
-              Text(pipeline.transcript)
-                .font(Font.custom(settings.selectedFont, size: settings.fontSize))
-                .foregroundStyle(settings.textColor)
-                .lineSpacing(lineSpacing)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
+
+              SubtitleFXView(
+                text: pipeline.transcript,
+                baseFontName: settings.selectedFont,
+                baseFontSize: settings.fontSize,
+                baseColor: settings.textColor,
+                style: pipeline.fxStyle,   // LoudnessMeter → SubtitleFXEngine 결과
+                lineSpacing: lineSpacing
+              )
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .fixedSize(horizontal: false, vertical: true)
             }
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .bottom)
             .clipped()
@@ -99,13 +91,8 @@ struct STTView: View {
       }
     }
     .contentShape(Rectangle())
-    .onTapGesture(count: 2) {
-      toggleWindowHeight()
-    }
-    .onAppear {
-      // ✅ 파이프라인 시작 (캡처 → YAM → STT)
-      pipeline.startRecording()
-    }
+    .onTapGesture(count: 2) { toggleWindowHeight() }
+    .onAppear { pipeline.startRecording() }
   }
 }
 
