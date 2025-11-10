@@ -299,6 +299,9 @@ struct STTView: View {
           // Liquid Glass 효과 적용
           w.applyLiquidGlass()
 
+          // 창을 항상 최상위에 표시
+          w.level = .floating
+
           w.isMovableByWindowBackground = true
           w.toolbar = nil
 
