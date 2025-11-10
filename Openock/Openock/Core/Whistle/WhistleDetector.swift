@@ -16,12 +16,21 @@ class WhistleDetector {
   // MARK: - Properties
 
   private var model: WhistleClassifier?
+  private var modelOutputKey: String?  // 모델 출력 키 (동적으로 결정)
   private let sampleRate: Double = 16000  // 모델 학습 시 사용된 샘플레이트
   private let bufferSize = 16000  // 1초 버퍼
 
   // 2단계 검증 시스템
-  private let stage1Threshold: Float = 0.50  // 1단계: 매우 널널한 기준 (의심 구간 포착)
-  private let stage2Threshold: Float = 0.75  // 2단계: 매우 엄격한 기준 (최종 확인)
+  private let stage1Threshold: Float = 0.70  // 1단계: 널널한 기준 (의심 구간 포착)
+  private let stage2Threshold: Float = 0.80  // 2단계: 엄격한 기준 (최종 확인)
+
+  // 에너지 임계값
+  private let minEnergyThreshold: Float = 0.002  // 최소 에너지 임계값
+  private let filteredEnergyThreshold: Float = 0.01  // 필터링된 에너지 임계값
+
+  // 호루라기 주파수 범위
+  private let whistleFreqLow: Float = 2000.0  // 2000Hz
+  private let whistleFreqHigh: Float = 4500.0  // 4500Hz
 
   // 연속 감지 방지
   private var lastDetectionTime: Date?
@@ -33,7 +42,9 @@ class WhistleDetector {
 
   // 오디오 링 버퍼 (최근 2초 유지 - 축구 중계용)
   private var audioRingBuffer: [[Float]] = []
-  private let ringBufferMaxSize = 120  // 약 2초치
+  private var ringBufferMaxSize: Int = 20  // 동적으로 계산됨 (목표: 2초)
+  private let ringBufferTargetSeconds: Double = 2.0  // 링 버퍼 목표 시간
+  private let bufferCallInterval: Int = 10  // AudioPipeline에서 10번에 한 번 호출
   
   // MARK: - Initialization
   
@@ -45,16 +56,48 @@ class WhistleDetector {
     do {
       let config = MLModelConfiguration()
       config.computeUnits = .cpuAndNeuralEngine  // Neural Engine 사용
-      
+
       model = try WhistleClassifier(configuration: config)
-      print("✅ [WhistleDetector] Model loaded successfully")
+
+      // 모델 출력 키 자동 추출
+      if let outputName = model?.model.modelDescription.outputDescriptionsByName.keys.first {
+        modelOutputKey = outputName
+        print("✅ [WhistleDetector] Model loaded successfully (output key: \(outputName))")
+      } else {
+        print("⚠️ [WhistleDetector] Model loaded but output key not found, using fallback")
+        modelOutputKey = "var_879"  // 기본값
+      }
     } catch {
       print("❌ [WhistleDetector] Failed to load model: \(error)")
     }
   }
   
+  // MARK: - Helper Methods
+
+  /// 링 버퍼 크기를 동적으로 계산
+  /// - Parameters:
+  ///   - targetSeconds: 목표 시간 (초)
+  ///   - frameLength: 실제 버퍼 프레임 수
+  ///   - sampleRate: 샘플레이트
+  /// - Returns: 필요한 링 버퍼 개수
+  private func calculateRingBufferSize(targetSeconds: Double, frameLength: Int, sampleRate: Double) -> Int {
+    // 1. 버퍼 하나의 시간 계산
+    let bufferDuration = Double(frameLength) / sampleRate
+
+    // 2. 호루라기 감지 간격 계산 (10번에 한 번)
+    let detectionInterval = bufferDuration * Double(bufferCallInterval)
+
+    // 3. 1초에 몇 번 호출되는지 계산
+    let callsPerSecond = 1.0 / detectionInterval
+
+    // 4. 목표 시간에 필요한 호출 횟수
+    let requiredCalls = Int(ceil(targetSeconds * callsPerSecond))
+
+    return max(requiredCalls, 5)  // 최소 5개는 유지
+  }
+
   // MARK: - Detection
-  
+
   // 최근 감지 확률 (UI 표시용)
   private(set) var lastWhistleProbability: Float = 0.0
   private(set) var lastRMSEnergy: Float = 0.0
@@ -87,7 +130,19 @@ class WhistleDetector {
     let frameLength = Int(buffer.frameLength)
     var audioData = Array(UnsafeBufferPointer(start: channelData, count: frameLength))
 
-    // 1.5. 링 버퍼에 오디오 저장 (최근 1초 유지)
+    // 1.5. 링 버퍼 크기를 실제 버퍼 정보로 동적 계산 (최초 1회만)
+    if audioRingBuffer.isEmpty {
+      let currentSampleRate = buffer.format.sampleRate
+      ringBufferMaxSize = calculateRingBufferSize(
+        targetSeconds: ringBufferTargetSeconds,
+        frameLength: frameLength,
+        sampleRate: currentSampleRate
+      )
+      print("📏 [WhistleDetector] Ring buffer size calculated: \(ringBufferMaxSize) buffers for \(ringBufferTargetSeconds)s")
+      print("   ↳ Frame length: \(frameLength), Sample rate: \(currentSampleRate)Hz")
+    }
+
+    // 1.6. 링 버퍼에 오디오 저장
     audioRingBuffer.append(audioData)
     if audioRingBuffer.count > ringBufferMaxSize {
       audioRingBuffer.removeFirst()
@@ -95,12 +150,11 @@ class WhistleDetector {
 
     // 2. 에너지 체크 (소리가 실제로 있는지 확인)
     let rms = sqrt(audioData.map { $0 * $0 }.reduce(0, +) / Float(audioData.count))
-    let energyThreshold: Float = 0.001  // 매우 낮춤 (축구 중계 호루라기는 멀리서 들림)
 
     lastRMSEnergy = rms  // UI 표시용 저장
 
-    if rms < energyThreshold {
-      // 거의 완전 무음만 스킵
+    if rms < minEnergyThreshold {
+      // 최소 에너지 미달 시 스킵
       lastWhistleProbability = 0.0
       lastDominantFrequency = 0.0
       lastStage1Probability = 0.0
@@ -109,20 +163,20 @@ class WhistleDetector {
       return false
     }
 
-    // 2.5. 호루라기 주파수 필터링 및 검증 (좁은 범위)
+    // 2.5. 호루라기 주파수 필터링 및 검증
     let currentSampleRate = buffer.format.sampleRate
 
-    // Band-pass filter 적용 (1500-5000Hz - 더 넓은 호루라기 주파수 범위)
-    audioData = applyBandPassFilter(audioData, lowCutoff: 1500.0, highCutoff: 5000.0, sampleRate: Float(currentSampleRate))
+    // Band-pass filter 적용 (축구 경기 호루라기 주파수 범위)
+    audioData = applyBandPassFilter(audioData, lowCutoff: whistleFreqLow, highCutoff: whistleFreqHigh, sampleRate: Float(currentSampleRate))
 
     // 필터링 후 에너지 체크
     let filteredRMS = sqrt(audioData.map { $0 * $0 }.reduce(0, +) / Float(audioData.count))
 
-    print("🔊 [WhistleDetector] Filtered energy (1500-5000Hz): \(filteredRMS)")
+    print("🔊 [WhistleDetector] Filtered energy (\(Int(whistleFreqLow))-\(Int(whistleFreqHigh))Hz): \(filteredRMS)")
 
     // 필터링 후 에너지가 너무 낮으면 호루라기 아님
-    if filteredRMS < 0.004 {
-      print("🚫 [WhistleDetector] Not enough energy in whistle frequency range (< 0.004)")
+    if filteredRMS < filteredEnergyThreshold {
+      print("🚫 [WhistleDetector] Not enough energy in whistle frequency range (< \(filteredEnergyThreshold))")
       lastWhistleProbability = 0.0
       lastStage1Probability = 0.0
       lastStage2Probability = 0.0
@@ -137,9 +191,9 @@ class WhistleDetector {
 
     print("🎼 [WhistleDetector] Dominant frequency (after filter): \(dominantFreq) Hz")
 
-    // 필터링 후에도 주파수가 1500-5000Hz 범위인지 확인
-    if dominantFreq < 1500.0 || dominantFreq > 5000.0 {
-      print("🚫 [WhistleDetector] Dominant frequency out of whistle range: \(dominantFreq) Hz (expected 1500-5000 Hz)")
+    // 필터링 후에도 주파수가 호루라기 범위인지 확인
+    if dominantFreq < whistleFreqLow || dominantFreq > whistleFreqHigh {
+      print("🚫 [WhistleDetector] Dominant frequency out of whistle range: \(dominantFreq) Hz (expected \(Int(whistleFreqLow))-\(Int(whistleFreqHigh)) Hz)")
       lastWhistleProbability = 0.0
       lastStage1Probability = 0.0
       lastStage2Probability = 0.0
@@ -192,10 +246,11 @@ class WhistleDetector {
 
       // 9. 결과 분석
       guard let provider = output as? MLFeatureProvider,
-            let feature = provider.featureValue(for: "var_879"), // 필요시 출력 키 이름 수정
+            let outputKey = modelOutputKey,
+            let feature = provider.featureValue(for: outputKey),
             let logits = feature.multiArrayValue,
             logits.count == 2 else {
-        print("❌ [WhistleDetector] Could not access model output")
+        print("❌ [WhistleDetector] Could not access model output (key: \(modelOutputKey ?? "nil"))")
         return false
       }
       
@@ -229,8 +284,16 @@ class WhistleDetector {
 
       // ==================== 2단계 검증 (슬라이딩 윈도우) ====================
       // 여러 구간을 검사해서 최대값 사용
-      guard audioRingBuffer.count >= 60 else {
-        print("⚠️ [Stage 2] Not enough audio buffer, skipping stage 2")
+
+      // 슬라이딩 윈도우 크기를 동적으로 계산
+      let window1_0s = calculateRingBufferSize(targetSeconds: 1.0, frameLength: frameLength, sampleRate: currentSampleRate)
+      let window0_7s = calculateRingBufferSize(targetSeconds: 0.7, frameLength: frameLength, sampleRate: currentSampleRate)
+      let window0_5s = calculateRingBufferSize(targetSeconds: 0.5, frameLength: frameLength, sampleRate: currentSampleRate)
+
+      let minRequiredBuffers = window0_5s  // 최소 윈도우 크기
+
+      guard audioRingBuffer.count >= minRequiredBuffers else {
+        print("⚠️ [Stage 2] Not enough audio buffer (\(audioRingBuffer.count)/\(minRequiredBuffers)), skipping stage 2")
         lastWhistleProbability = whistleProb
         lastStage2Probability = 0.0
         return false
@@ -241,9 +304,9 @@ class WhistleDetector {
 
       // 슬라이딩 윈도우: 최근 1초, 0.7초, 0.5초 세 구간 검사
       let windows = [
-        (size: 60, name: "1.0s"),
-        (size: 42, name: "0.7s"),
-        (size: 30, name: "0.5s")
+        (size: window1_0s, name: "1.0s"),
+        (size: window0_7s, name: "0.7s"),
+        (size: window0_5s, name: "0.5s")
       ]
 
       for (index, window) in windows.enumerated() {
@@ -305,10 +368,10 @@ class WhistleDetector {
     var enhanced = samples
 
     // 1. 증폭 (5배 - 과도한 증폭은 노이즈를 키움)
-    enhanced = enhanced.map { $0 * 5.0 }
+    enhanced = enhanced.map { $0 * 3.0 }
 
-    // 2. 대역 통과 필터 (1500-5000Hz만 통과 - 더 넓은 호루라기 주파수 대역)
-    enhanced = applyBandPassFilter(enhanced, lowCutoff: 1500.0, highCutoff: 5000.0, sampleRate: sampleRate)
+    // 2. 대역 통과 필터 (축구 경기 호루라기 주파수 대역)
+    enhanced = applyBandPassFilter(enhanced, lowCutoff: whistleFreqLow, highCutoff: whistleFreqHigh, sampleRate: sampleRate)
 
     // 3. 고주파 강조 (호루라기 특성 부스트) - 오탐지를 유발할 수 있어 비활성화
     // enhanced = boostHighFrequencies(enhanced, sampleRate: sampleRate)
@@ -437,7 +500,8 @@ class WhistleDetector {
       let output = try model.prediction(input: input)
 
       guard let provider = output as? MLFeatureProvider,
-            let feature = provider.featureValue(for: "var_879"),
+            let outputKey = modelOutputKey,
+            let feature = provider.featureValue(for: outputKey),
             let logits = feature.multiArrayValue,
             logits.count == 2 else {
         return 0.0
