@@ -201,7 +201,20 @@ final class AudioPipeline: ObservableObject {
     }
 
     func resumeRecording() {
+        // 재개 시 STT 파이프라인 완전히 재시작
+        if #available(macOS 15.0, *) {
+            // 기존 파이프라인 정지
+            sttEngine.stopTranscriptionOnly()
+            // 텍스트 초기화
+            sttEngine.clearTranscript()
+            // 파이프라인 재시작
+            Task { @MainActor in
+                await sttEngine.startTranscriptionOnly()
+            }
+        }
+
         io.isPaused = false
         isPaused = false
+        transcript = ""
     }
 }

@@ -43,19 +43,21 @@ final class SettingsManager: ObservableObject {
   // MARK: - Derived color properties
   var backgroundColor: Color {
     switch selectedBackground {
-    case "블랙": return .black
-    case "화이트": return .white
-    case "커스텀": return customBackgroundColor
-    default: return .clear
+    case "블랙", "black": return .black
+    case "화이트", "white": return .white
+    case "커스텀", "custom": return customBackgroundColor
+    default: return .black  // 기본값을 블랙으로 변경
+
     }
   }
-  
+
   var textColor: Color {
     switch selectedBackground {
-    case "블랙": return .white
-    case "화이트": return .black
-    case "커스텀": return customTextColor
-    default: return .primary
+    case "블랙", "black": return .white
+    case "화이트", "white": return .black
+    case "커스텀", "custom": return customTextColor
+    default: return .white  // 기본 배경이 블랙이므로 텍스트는 화이트
+
     }
   }
   
