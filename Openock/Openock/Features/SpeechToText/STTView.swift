@@ -141,8 +141,9 @@ struct STTView: View {
     let textVisible = pipeline.isPaused ? showTextArea : true
 
     ZStack(alignment: .top) {
-      // 배경색을 가장 먼저 배치
+      // 배경색을 가장 먼저 배치 (80% 투명도)
       settings.backgroundColor
+        .opacity(0.8)
         .glassEffect(.clear, in: .rect)
         .ignoresSafeArea(.all)
 
