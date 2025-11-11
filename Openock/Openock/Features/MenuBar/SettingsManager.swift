@@ -45,7 +45,8 @@ final class SettingsManager: ObservableObject {
     switch selectedBackground {
     case "블랙": return .black
     case "화이트": return .white
-    case "커스텀": return customBackgroundColor
+    case "그레이": return .gray
+    case "고대비": return .yellow
     default: return .clear
     }
   }
@@ -54,7 +55,8 @@ final class SettingsManager: ObservableObject {
     switch selectedBackground {
     case "블랙": return .white
     case "화이트": return .black
-    case "커스텀": return customTextColor
+    case "그레이": return .white
+    case "고대비": return .black
     default: return .primary
     }
   }
