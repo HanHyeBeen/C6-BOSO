@@ -13,7 +13,6 @@ struct AppearanceView: View {
   private let sizeRange: ClosedRange<CGFloat> = 18...64
   
   @State private var fontPickerPanel: NSPanel?
-  @State private var colorPickerPanel: NSPanel?
   
   @State private var fontGlobalMonitor: Any?
   @State private var fontLocalMonitor: Any?
