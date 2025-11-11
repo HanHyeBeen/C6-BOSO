@@ -156,6 +156,7 @@ struct STTView: View {
         .ignoresSafeArea(.all)
       
       VStack(spacing: 0) {
+
         // 컨트롤 영역 (상단)
         if controlsVisible {
           STTControlsView(controlHeight: controlHeight)

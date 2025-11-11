@@ -159,7 +159,7 @@ class AudioCaptureManager {
       completion(nil)
       return
     }
-    
+
     print("⏳ [AudioCaptureManager] Waiting for device to be ready...")
     // Give the aggregate device time to initialize (CoreAudio needs time)
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

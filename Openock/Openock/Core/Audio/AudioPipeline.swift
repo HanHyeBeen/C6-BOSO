@@ -17,6 +17,15 @@ final class AudioPipeline: ObservableObject {
     @Published var isRecording: Bool = false
     @Published var isPaused: Bool = false
 
+    // 호루라기 감지 상태
+    @Published var isWhistleDetected: Bool = false
+    @Published var whistleProbability: Float = 0.0
+    @Published var audioEnergy: Float = 0.0
+    @Published var dominantFrequency: Float = 0.0
+    @Published var stage1Probability: Float = 0.0
+    @Published var stage2Probability: Float = 0.0
+
+
     // MARK: - 라우드니스/스타일 공개 값
     @Published var loudnessDB: Double = 0
     @Published var fxStyle: SubtitleStyle = .neutral
@@ -26,9 +35,17 @@ final class AudioPipeline: ObservableObject {
     private let io = AudioIOManager()
     private let yamRunner = YAMNetRunner()
 
+    // 호루라기 감지기
+    @available(macOS 15.0, *)
+    private let whistleDetector = WhistleDetector()
+
     // 팀 공용 STT 엔진 사용 (분석 파이프라인만 사용)
     @available(macOS 15.0, *)
     private let sttEngine = STTEngine()
+
+    // 호루라기 인디케이터 창 매니저
+    private var whistleManager: WhistleIndicatorWindowManager?
+    private var bufferCallCount = 0
 
     // 라우드니스/스타일 엔진
     private let loudness = LoudnessMeter()
@@ -58,6 +75,8 @@ final class AudioPipeline: ObservableObject {
                 .assign(to: &$transcript)
         }
 
+        // 호루라기 인디케이터 창 매니저 초기화
+        whistleManager = WhistleIndicatorWindowManager(pipeline: self)
         // dB 측정값 구독 → fx 업데이트
         loudness.$dB
             .receive(on: DispatchQueue.main)
@@ -166,6 +185,8 @@ final class AudioPipeline: ObservableObject {
                     // 2) STT (원본 PCM 그대로 전달)
                     if #available(macOS 15.0, *) {
                         self.sttEngine.feed(buffer: pcm)
+                        // 3) 호루라기 감지
+                        self.handleWhistleDetection(buffer: pcm)
                     }
                     // 3) dB 측정 (원본 PCM 사용)
                     self.loudness.ingest(pcm)
@@ -216,5 +237,41 @@ final class AudioPipeline: ObservableObject {
         io.isPaused = false
         isPaused = false
         transcript = ""
+    }
+
+    // MARK: - 호루라기 감지
+    @available(macOS 15.0, *)
+    private func handleWhistleDetection(buffer: AVAudioPCMBuffer) {
+        bufferCallCount += 1
+
+        // 매 버퍼마다 체크하여 모든 소리 입력에 대해 실시간 값 표시
+        if bufferCallCount % 1 == 0 {
+            // 백그라운드 스레드에서 실행하여 메인 오디오 처리에 영향 없도록
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                guard let self = self else { return }
+                let whistleDetected = self.whistleDetector.detectWhistle(from: buffer)
+
+                // UI에 디버깅 정보 업데이트 (모든 소리 입력에 대해)
+                DispatchQueue.main.async {
+                    self.whistleProbability = self.whistleDetector.lastWhistleProbability
+                    self.audioEnergy = self.whistleDetector.lastRMSEnergy
+                    self.dominantFrequency = self.whistleDetector.lastDominantFrequency
+                    self.stage1Probability = self.whistleDetector.lastStage1Probability
+                    self.stage2Probability = self.whistleDetector.lastStage2Probability
+                }
+
+                if whistleDetected {
+                    DispatchQueue.main.async {
+                        self.isWhistleDetected = true
+                        print("🎵 [AudioPipeline] Whistle detected!")
+                    }
+
+                    // 3초 후 자동으로 아이콘 사라지게
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                        self.isWhistleDetected = false
+                    }
+                }
+            }
+        }
     }
 }
