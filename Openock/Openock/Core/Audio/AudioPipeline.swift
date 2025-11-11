@@ -118,14 +118,14 @@ final class AudioPipeline: ObservableObject {
     private func handleWhistleDetection(buffer: AVAudioPCMBuffer) {
         bufferCallCount += 1
 
-        // 10번에 한 번씩 체크 (매우 빠른 반응)
-        if bufferCallCount % 10 == 0 {
+        // 매 버퍼마다 체크하여 모든 소리 입력에 대해 실시간 값 표시
+        if bufferCallCount % 1 == 0 {
             // 백그라운드 스레드에서 실행하여 메인 오디오 처리에 영향 없도록
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 guard let self = self else { return }
                 let whistleDetected = self.whistleDetector.detectWhistle(from: buffer)
 
-                // UI에 디버깅 정보 업데이트
+                // UI에 디버깅 정보 업데이트 (모든 소리 입력에 대해)
                 DispatchQueue.main.async {
                     self.whistleProbability = self.whistleDetector.lastWhistleProbability
                     self.audioEnergy = self.whistleDetector.lastRMSEnergy

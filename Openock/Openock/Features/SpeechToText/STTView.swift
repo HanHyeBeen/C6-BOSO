@@ -34,24 +34,6 @@ struct STTView: View {
         .ignoresSafeArea()
         .animation(.easeInOut(duration: 0.25), value: settings.selectedBackground)
 
-      // Whistle detection icon overlay
-      if pipeline.isWhistleDetected {
-        VStack {
-          HStack {
-            Spacer()
-            Image(systemName: "speaker.wave.3.fill")
-              .font(.system(size: 50))
-              .foregroundColor(.yellow)
-              .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
-              .padding(.trailing, 20)
-              .padding(.top, 60)
-          }
-          Spacer()
-        }
-        .transition(.scale.combined(with: .opacity))
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: pipeline.isWhistleDetected)
-      }
-
       VStack(spacing: 0) {
         // Whistle detection debug info (top)
         HStack {
