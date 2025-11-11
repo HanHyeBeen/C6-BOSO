@@ -37,6 +37,9 @@ final class AudioPipeline: ObservableObject {
     @available(macOS 15.0, *)
     private let sttEngine = STTEngine()
 
+    // 호루라기 인디케이터 창 매니저
+    private var whistleManager: WhistleIndicatorWindowManager?
+
     private var bag = Set<AnyCancellable>()
     private var bufferCallCount = 0
 
@@ -52,6 +55,9 @@ final class AudioPipeline: ObservableObject {
                 .receive(on: DispatchQueue.main)
                 .assign(to: &$transcript)
         }
+
+        // 호루라기 인디케이터 창 매니저 초기화
+        whistleManager = WhistleIndicatorWindowManager(pipeline: self)
     }
 
     // 캡처 + IO 시작
