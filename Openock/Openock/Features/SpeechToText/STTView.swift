@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import Combine
 
 struct STTView: View {
   @EnvironmentObject var pipeline: AudioPipeline
@@ -231,6 +232,10 @@ struct STTView: View {
         throttledUpdateWindowHeight()
       }
     }
+    .onReceive(pipeline.$yamCue.compactMap { $0 }) { cue in
+      presentOverlay(for: cue, total: 3.0)
+      
+    }
     .onChange(of: settings.fontSize) { _ in
       throttledUpdateWindowHeight()
     }
@@ -275,6 +280,10 @@ struct STTView: View {
       }
     )
   }
+}
+
+private func presentOverlay(for cue: YamCue, total: TimeInterval) {
+  OverlayController.shared.present(cue: cue, total: total)
 }
 
 #Preview {

@@ -20,6 +20,8 @@ final class AudioPipeline: ObservableObject {
     // MARK: - 라우드니스/스타일 공개 값
     @Published var loudnessDB: Double = 0
     @Published var fxStyle: SubtitleStyle = .neutral
+  
+    @Published var yamCue: YamCue?
 
     // MARK: - 내부 구성요소
     private let capture = AudioCaptureManager()
@@ -51,6 +53,11 @@ final class AudioPipeline: ObservableObject {
             .receive(on: DispatchQueue.main)
             .assign(to: &$yamStatus)
 
+        yamRunner.$cue
+          .compactMap { $0 }
+          .receive(on: DispatchQueue.main)
+          .assign(to: &$yamCue)
+      
         // STTEngine의 transcript 반영
         if #available(macOS 15.0, *) {
             sttEngine.$transcript
