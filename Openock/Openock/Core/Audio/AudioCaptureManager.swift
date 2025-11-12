@@ -159,11 +159,15 @@ class AudioCaptureManager {
       completion(nil)
       return
     }
-    
-    print("✅ [AudioCaptureManager] Full system audio capture ready! Device ID: \(deviceID)")
-    completion(deviceID)
+
+    print("⏳ [AudioCaptureManager] Waiting for device to be ready...")
+    // Give the aggregate device time to initialize (CoreAudio needs time)
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+      print("✅ [AudioCaptureManager] Full system audio capture ready! Device ID: \(deviceID)")
+      completion(deviceID)
+    }
   }
-  
+   
   /// Clean up created audio objects
   func cleanup() {
     if tapID != kAudioObjectUnknown {
