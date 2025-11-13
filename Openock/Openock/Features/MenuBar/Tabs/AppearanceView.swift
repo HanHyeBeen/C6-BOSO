@@ -67,30 +67,35 @@ struct AppearanceView: View {
       Text("서체")
         .font(.bsTitle)
         .lineHeight(11, fontSize: 1.5)
+        .foregroundStyle(Color.bsGrayScale1)
       
       Button(action: {
         openFontPickerPanel()
       }, label: {
         HStack(alignment: .center) {
           Text(settings.selectedFont.isEmpty ? "서체 선택" : settings.selectedFont)
+            .font(.bsFontCaption1)
+            .lineHeight(17, fontSize: 1.5)
             .lineLimit(1)
+            .foregroundStyle(Color.bsTextBackgroundBlack)
           
           Spacer()
           
           Image(systemName: "chevron.down")
             .font(.system(size: 10))
+            .foregroundStyle(Color.bsTextBackgroundBlack)
             .padding(10)
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 4)
         .background(
           RoundedRectangle(cornerRadius: 8)
-            .foregroundStyle(Color(red: 0.98, green: 0.98, blue: 0.98))
+            .foregroundStyle(Color.bsGrayScale5)
         )
         .overlay(
           RoundedRectangle(cornerRadius: 8)
             .inset(by: 0.34)
-            .stroke(Color(red: 0.94, green: 0.94, blue: 0.94), lineWidth: 0.67121)
+            .stroke(Color.bsGrayScale4, lineWidth: 1)
         )
       })
       .buttonStyle(.plain)
@@ -103,6 +108,7 @@ struct AppearanceView: View {
       Text("크기")
         .font(.bsTitle)
         .lineHeight(11, fontSize: 1.5)
+        .foregroundStyle(Color.bsGrayScale1)
       
       ZStack {
         VStack(alignment: .leading, spacing: 8) {
@@ -110,12 +116,12 @@ struct AppearanceView: View {
             Text("작게")
               .font(.bsSmallText)
               .lineHeight(11, fontSize: 1.0)
-              .foregroundStyle(.secondary)
+              .foregroundStyle(Color.bsTextBackgroundBlack)
             Spacer()
             Text("크게")
               .font(.bsBigText)
               .lineHeight(20, fontSize: 1.0)
-              .foregroundStyle(.secondary)
+              .foregroundStyle(Color.bsTextBackgroundBlack)
           }
           
           Slider(value: $settings.fontSize, in: sizeRange, step: 16)
@@ -125,11 +131,11 @@ struct AppearanceView: View {
           
         }
         .padding(16)
-        .background(Color(NSColor.quaternaryLabelColor).opacity(0.1))
+        .background(Color.bsGrayScale5)
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay(
           RoundedRectangle(cornerRadius: 8)
-            .stroke(Color(NSColor.separatorColor), lineWidth: 0.5)
+            .stroke(Color.bsGrayScale4, lineWidth: 1)
         )
         
         GeometryReader { geo in
@@ -137,12 +143,12 @@ struct AppearanceView: View {
             Text("\(Int(settings.fontSize))pt")
               .font(.bsMediumText)
               .lineHeight(13, fontSize: 1.0)
-              .foregroundColor(.primary)
+              .foregroundStyle(Color.bsTextBackgroundBlack)
               .padding(.horizontal, 6)
               .padding(.vertical, 3)
               .background(
                 RoundedRectangle(cornerRadius: 8)
-                  .fill(Color.gray)
+                  .fill(Color.bsGrayScale4)
               )
               .offset(x: thumbXPosition(in: geo.size.width - 35) + 10, y: 25)
               .animation(.easeInOut(duration: 0.15), value: settings.fontSize)
@@ -158,6 +164,7 @@ struct AppearanceView: View {
       Text("자막 스타일")
         .font(.bsTitle)
         .lineHeight(11, fontSize: 1.5)
+        .foregroundStyle(Color.bsGrayScale1)
       
       HStack {
         ForEach(CaptionBG.allCases, id: \.self) { option in
@@ -169,44 +176,38 @@ struct AppearanceView: View {
               ZStack {
                 switch option {
                 case .black:
-                  Color.black
+                  Color.bsTextBackgroundBlack
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                   Text("가")
-                    .font(.bsSubtitleStyleSelect)
-                    .lineHeight(32.22, fontSize: 1.5)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.bsTextBackgroundWhite)
                 case .white:
-                  Color.white
+                  Color.bsTextBackgroundWhite
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                   Text("가")
-                    .font(.bsSubtitleStyleSelect)
-                    .lineHeight(32.22, fontSize: 1.5)
-                    .foregroundColor(Color(red: 0.24, green: 0.24, blue: 0.24))
+                    .foregroundColor(Color.bsTextBackgroundBlack)
                 case .gray:
-                  Color.gray
+                  Color.bsTextBackgroundGray
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                   Text("가")
-                    .font(.bsSubtitleStyleSelect)
-                    .lineHeight(32.22, fontSize: 1.5)
                     .foregroundColor(Color.white)
                 case .contrast:
-                  Color.yellow
+                  Color.bsTextBackgroundYellow
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                   Text("가")
-                    .font(.bsSubtitleStyleSelect)
-                    .lineHeight(32.22, fontSize: 1.5)
-                    .foregroundColor(Color(red: 0.24, green: 0.24, blue: 0.24))
+                    .foregroundColor(Color.bsTextBackgroundHighContrast)
                 }
               }
-              .font(.system(size: 20, weight: .semibold))
+              .font(.bsSubtitleStyleSelect)
+              .lineHeight(32.22, fontSize: 1.5)
               .frame(width: 67, height: 67)
               .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                  .stroke(settings.selectedBackground == option.rawValue ? Color.purple : Color.clear, lineWidth: 2)
+                  .stroke(settings.selectedBackground == option.rawValue ? Color.bsSub1 : Color.clear, lineWidth: 2)
               )
               Text(option.rawValue)
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
+                .font(.bsBackgroundStyleCaption)
+                .lineHeight(11, fontSize: 1.5)
+                .foregroundStyle(Color.bsTextBackgroundBlack)
             }
           }
           .buttonStyle(.plain)
@@ -217,11 +218,11 @@ struct AppearanceView: View {
         }
       }
       .padding(6)
-      .background(Color(NSColor.quaternaryLabelColor).opacity(0.1))
+      .background(Color.bsGrayScale5)
       .clipShape(RoundedRectangle(cornerRadius: 8))
       .overlay(
         RoundedRectangle(cornerRadius: 8)
-          .stroke(Color(NSColor.separatorColor), lineWidth: 0.5)
+          .stroke(Color.bsGrayScale4, lineWidth: 1)
       )
     }
   }
@@ -232,6 +233,7 @@ struct AppearanceView: View {
       Text("자막 강조 색상")
         .font(.bsTitle)
         .lineHeight(11, fontSize: 1.5)
+        .foregroundStyle(Color.bsGrayScale1)
       
       HStack {
         ForEach(HighlightColor.allCases, id: \.self) { option in
@@ -262,11 +264,11 @@ struct AppearanceView: View {
         }
       }
       .padding(8)
-      .background(Color(NSColor.quaternaryLabelColor).opacity(0.1))
+      .background(Color.bsTextBackgroundWhite)
       .clipShape(RoundedRectangle(cornerRadius: 8))
       .overlay(
         RoundedRectangle(cornerRadius: 8)
-          .stroke(Color(NSColor.separatorColor), lineWidth: 0.5)
+          .stroke(Color.bsGrayScale4, lineWidth: 1)
       )
     }
   }

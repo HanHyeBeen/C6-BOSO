@@ -44,12 +44,14 @@ struct FontPickerSheetView: View {
         Text("서체")
           .font(.bsTitle)
           .lineHeight(11, fontSize: 1.5)
+          .foregroundStyle(Color.bsGrayScale1)
         Spacer()
         Button(action: {
           isPresented = false
         }, label: {
           Image(systemName: "xmark")
-            .font(.system(size: 10, weight: .semibold))
+            .font(.system(size: 10))
+            .foregroundStyle(Color.bsTextBackgroundBlack)
         })
         .buttonStyle(.plain)
       }
@@ -59,30 +61,32 @@ struct FontPickerSheetView: View {
       // 검색창
       HStack(alignment: .center) {
         Image(systemName: "magnifyingglass")
-          .font(Font.system(size: 10))
-          .foregroundStyle(Color.black)
+          .font(.system(size: 10))
+          .foregroundStyle(Color.bsTextBackgroundBlack)
           .padding(6)
         
         TextField("", text: $searchText)
           .textFieldStyle(.plain)
           .font(.bsFontCaption2)
+          .foregroundStyle(Color.bsTextBackgroundBlack)
           .lineHeight(16, fontSize: 1.5)
       }
       .padding(.horizontal, 4)
       .padding(.vertical, 2)
       .background(
         RoundedRectangle(cornerRadius: 15)
-          .foregroundStyle(Color(red: 0.98, green: 0.98, blue: 0.98))
+          .foregroundStyle(Color.bsGrayScale5)
       )
       .overlay(
         RoundedRectangle(cornerRadius: 15)
           .inset(by: 0.34)
-          .stroke(Color(red: 0.94, green: 0.94, blue: 0.94), lineWidth: 0.67121)
+          .stroke(Color.bsGrayScale4, lineWidth: 0.67)
       )
       .padding(.horizontal, 8)
       .padding(.bottom, 4)
       
-      Divider()}
+      Divider()
+    }
   }
   
   // MARK: - 폰트 리스트
@@ -100,11 +104,12 @@ struct FontPickerSheetView: View {
               Text(fontName)
                 .font(.bsFontCaption2)
                 .lineHeight(16, fontSize: 1.5)
-                .foregroundStyle(.primary)
+                .foregroundStyle(Color.bsTextBackgroundBlack)
               Spacer()
               if settings.selectedFont == fontName {
                 Image(systemName: "checkmark")
-                  .font(.system(size: 11, weight: .semibold))
+                  .font(.system(size: 11))
+                  .foregroundStyle(Color.bsSub1)
               }
             }
             .padding(.horizontal)

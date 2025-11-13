@@ -16,13 +16,13 @@ struct FeatureToggleView: View {
       Text("추가 기능")
         .font(.bsTitle)
         .lineHeight(11, fontSize: 1.5)
-        .foregroundColor(.secondary)
+        .foregroundColor(Color.bsGrayScale1)
         .padding(.horizontal, 16)
 
       VStack(spacing: 0) {
         featureRow(
           title: "자막 크기 효과",
-          isOn: $settings.toggleSizeFX   // ✅ 로컬 @State → settings 바인딩으로 교체
+          isOn: $settings.toggleSizeFX
         )
 
         Divider().padding(.leading, 16)
@@ -41,11 +41,11 @@ struct FeatureToggleView: View {
       }
       .background(
         RoundedRectangle(cornerRadius: 12)
-          .fill(Color(NSColor.controlBackgroundColor))
+          .fill(Color.bsGrayScale5)
       )
       .overlay(
         RoundedRectangle(cornerRadius: 12)
-          .stroke(Color.gray.opacity(0.2))
+          .stroke(Color.bsGrayScale4, lineWidth: 0.5)
       )
     }
   }
@@ -56,7 +56,7 @@ struct FeatureToggleView: View {
       Text(title)
         .font(.bsToggleCaption)
         .lineHeight(13, fontSize: 1.2)
-        .foregroundColor(.primary)
+        .foregroundColor(Color.bsTextBackgroundBlack)
         .padding(.vertical, 10)
       Spacer()
       Toggle("", isOn: isOn)
