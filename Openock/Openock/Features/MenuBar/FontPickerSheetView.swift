@@ -43,7 +43,7 @@ struct FontPickerSheetView: View {
       HStack(alignment: .center) {
         Text("서체")
           .font(.bsTitle)
-          .lineHeight(11, fontSize: 1.5)
+          .lineHeight(1.5, fontSize: 11)
           .foregroundStyle(Color.bsGrayScale1)
         Spacer()
         Button(action: {
@@ -69,7 +69,7 @@ struct FontPickerSheetView: View {
           .textFieldStyle(.plain)
           .font(.bsFontCaption2)
           .foregroundStyle(Color.bsTextBackgroundBlack)
-          .lineHeight(16, fontSize: 1.5)
+          .lineHeight(1.5, fontSize: 16)
       }
       .padding(.horizontal, 4)
       .padding(.vertical, 2)
@@ -103,7 +103,7 @@ struct FontPickerSheetView: View {
             HStack {
               Text(fontName)
                 .font(.bsFontCaption2)
-                .lineHeight(16, fontSize: 1.5)
+                .lineHeight(1.5, fontSize: 16)
                 .foregroundStyle(Color.bsTextBackgroundBlack)
               Spacer()
               if settings.selectedFont == fontName {

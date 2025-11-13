@@ -50,7 +50,7 @@ private struct Header: View {
     ZStack {
       Text("설정")
         .font(.bsTitle)
-        .lineHeight(11, fontSize: 1.5)
+        .lineHeight(1.5, fontSize: 11)
         .foregroundStyle(Color.bsTextBackgroundBlack)
 
       HStack {
@@ -77,7 +77,7 @@ private struct Tabs: View {
         } label: {
           Text(t.rawValue)
             .font(tab == t ? .bsTabBarOn : .bsTabBarOff)
-            .lineHeight(13, fontSize: 1.5)
+            .lineHeight(1.5, fontSize: 13)
             .padding(.vertical, 4)
             .padding(.horizontal, 6)
             .background(tab == t ? AnyShapeStyle(Color.bsGrayScale4) : AnyShapeStyle(.clear), in: RoundedRectangle(cornerRadius: 8, style: .continuous))

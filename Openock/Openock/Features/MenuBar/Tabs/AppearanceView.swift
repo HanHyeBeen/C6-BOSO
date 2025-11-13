@@ -66,7 +66,7 @@ struct AppearanceView: View {
     VStack(alignment: .leading, spacing: 6) {
       Text("서체")
         .font(.bsTitle)
-        .lineHeight(11, fontSize: 1.5)
+        .lineHeight(1.5, fontSize: 11)
         .foregroundStyle(Color.bsGrayScale1)
       
       Button(action: {
@@ -75,7 +75,7 @@ struct AppearanceView: View {
         HStack(alignment: .center) {
           Text(settings.selectedFont.isEmpty ? "서체 선택" : settings.selectedFont)
             .font(.bsFontCaption1)
-            .lineHeight(17, fontSize: 1.5)
+            .lineHeight(1.5, fontSize: 17)
             .lineLimit(1)
             .foregroundStyle(Color.bsTextBackgroundBlack)
           
@@ -107,7 +107,7 @@ struct AppearanceView: View {
     VStack(alignment: .leading, spacing: 6) {
       Text("크기")
         .font(.bsTitle)
-        .lineHeight(11, fontSize: 1.5)
+        .lineHeight(1.5, fontSize: 11)
         .foregroundStyle(Color.bsGrayScale1)
       
       ZStack {
@@ -115,12 +115,12 @@ struct AppearanceView: View {
           HStack(alignment: .bottom) {
             Text("작게")
               .font(.bsSmallText)
-              .lineHeight(11, fontSize: 1.0)
+              .lineHeight(1.0, fontSize: 11)
               .foregroundStyle(Color.bsTextBackgroundBlack)
             Spacer()
             Text("크게")
               .font(.bsBigText)
-              .lineHeight(20, fontSize: 1.0)
+              .lineHeight(1.0, fontSize: 20)
               .foregroundStyle(Color.bsTextBackgroundBlack)
           }
           
@@ -142,7 +142,7 @@ struct AppearanceView: View {
           ZStack(alignment: .leading) {
             Text("\(Int(settings.fontSize))pt")
               .font(.bsMediumText)
-              .lineHeight(13, fontSize: 1.0)
+              .lineHeight(1.0, fontSize: 13)
               .foregroundStyle(Color.bsTextBackgroundBlack)
               .padding(.horizontal, 6)
               .padding(.vertical, 3)
@@ -163,7 +163,7 @@ struct AppearanceView: View {
     VStack(alignment: .leading, spacing: 6) {
       Text("자막 스타일")
         .font(.bsTitle)
-        .lineHeight(11, fontSize: 1.5)
+        .lineHeight(1.5, fontSize: 11)
         .foregroundStyle(Color.bsGrayScale1)
       
       HStack {
@@ -198,7 +198,7 @@ struct AppearanceView: View {
                 }
               }
               .font(.bsSubtitleStyleSelect)
-              .lineHeight(32.22, fontSize: 1.5)
+              .lineHeight(1.5, fontSize: 32.22)
               .frame(width: 67, height: 67)
               .overlay(
                 RoundedRectangle(cornerRadius: 10)
@@ -206,7 +206,7 @@ struct AppearanceView: View {
               )
               Text(option.rawValue)
                 .font(.bsBackgroundStyleCaption)
-                .lineHeight(11, fontSize: 1.5)
+                .lineHeight(1.5, fontSize: 11)
                 .foregroundStyle(Color.bsTextBackgroundBlack)
             }
           }
@@ -232,7 +232,7 @@ struct AppearanceView: View {
     VStack(alignment: .leading, spacing: 6) {
       Text("자막 강조 색상")
         .font(.bsTitle)
-        .lineHeight(11, fontSize: 1.5)
+        .lineHeight(1.5, fontSize: 11)
         .foregroundStyle(Color.bsGrayScale1)
       
       HStack {

@@ -15,7 +15,7 @@ struct FeatureToggleView: View {
     VStack(alignment: .leading, spacing: 12) {
       Text("추가 기능")
         .font(.bsTitle)
-        .lineHeight(11, fontSize: 1.5)
+        .lineHeight(1.5, fontSize: 11)
         .foregroundColor(Color.bsGrayScale1)
         .padding(.horizontal, 16)
 
@@ -55,7 +55,7 @@ struct FeatureToggleView: View {
     HStack {
       Text(title)
         .font(.bsToggleCaption)
-        .lineHeight(13, fontSize: 1.2)
+        .lineHeight(1.2, fontSize: 13)
         .foregroundColor(Color.bsTextBackgroundBlack)
         .padding(.vertical, 10)
       Spacer()
