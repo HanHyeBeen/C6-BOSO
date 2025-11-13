@@ -14,7 +14,8 @@ struct FeatureToggleView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       Text("추가 기능")
-        .font(.system(size: 14, weight: .semibold))
+        .font(.bsTitle)
+        .lineHeight(11, fontSize: 1.5)
         .foregroundColor(.secondary)
         .padding(.horizontal, 16)
 
@@ -53,6 +54,8 @@ struct FeatureToggleView: View {
   private func featureRow(title: String, isOn: Binding<Bool>) -> some View {
     HStack {
       Text(title)
+        .font(.bsToggleCaption)
+        .lineHeight(13, fontSize: 1.2)
         .foregroundColor(.primary)
         .padding(.vertical, 10)
       Spacer()

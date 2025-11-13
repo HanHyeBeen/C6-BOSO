@@ -48,7 +48,8 @@ private struct Header: View {
   var body: some View {
     ZStack {
       Text("설정")
-        .font(.system(size: 11, weight: .semibold))
+        .font(.bsTitle)
+        .lineHeight(11, fontSize: 1.5)
 
       HStack {
         Spacer()
@@ -72,7 +73,8 @@ private struct Tabs: View {
           tab = t
         } label: {
           Text(t.rawValue)
-            .font(.system(size: 13, weight: tab == t ? .semibold : .regular))
+            .font(tab == t ? .bsTabBarOn : .bsTabBarOff)
+            .lineHeight(13, fontSize: 1.5)
             .padding(.vertical, 4)
             .padding(.horizontal, 6)
             .background(tab == t ? AnyShapeStyle(.thinMaterial) : AnyShapeStyle(.clear), in: RoundedRectangle(cornerRadius: 8, style: .continuous))

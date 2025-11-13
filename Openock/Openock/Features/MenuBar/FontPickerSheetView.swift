@@ -42,7 +42,8 @@ struct FontPickerSheetView: View {
       // 헤더
       HStack(alignment: .center) {
         Text("서체")
-          .font(.system(size: 11, weight: .semibold))
+          .font(.bsTitle)
+          .lineHeight(11, fontSize: 1.5)
         Spacer()
         Button(action: {
           isPresented = false
@@ -64,7 +65,8 @@ struct FontPickerSheetView: View {
         
         TextField("", text: $searchText)
           .textFieldStyle(.plain)
-          .font(.system(size: 12))
+          .font(.bsFontCaption2)
+          .lineHeight(16, fontSize: 1.5)
       }
       .padding(.horizontal, 4)
       .padding(.vertical, 2)
@@ -96,7 +98,8 @@ struct FontPickerSheetView: View {
           } label: {
             HStack {
               Text(fontName)
-                .font(Font.custom(fontName, size: 14))
+                .font(.bsFontCaption2)
+                .lineHeight(16, fontSize: 1.5)
                 .foregroundStyle(.primary)
               Spacer()
               if settings.selectedFont == fontName {

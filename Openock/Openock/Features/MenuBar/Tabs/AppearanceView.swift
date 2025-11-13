@@ -65,8 +65,8 @@ struct AppearanceView: View {
   var fontSelectView: some View {
     VStack(alignment: .leading, spacing: 6) {
       Text("서체")
-        .font(.system(size: 11))
-        .fontWeight(.semibold)
+        .font(.bsTitle)
+        .lineHeight(11, fontSize: 1.5)
       
       Button(action: {
         openFontPickerPanel()
@@ -101,18 +101,20 @@ struct AppearanceView: View {
   var sizeSelectView: some View {
     VStack(alignment: .leading, spacing: 6) {
       Text("크기")
-        .font(.system(size: 11))
-        .fontWeight(.semibold)
+        .font(.bsTitle)
+        .lineHeight(11, fontSize: 1.5)
       
       ZStack {
         VStack(alignment: .leading, spacing: 8) {
           HStack(alignment: .bottom) {
             Text("작게")
-              .font(.system(size: 11))
+              .font(.bsSmallText)
+              .lineHeight(11, fontSize: 1.0)
               .foregroundStyle(.secondary)
             Spacer()
             Text("크게")
-              .font(.system(size: 20))
+              .font(.bsBigText)
+              .lineHeight(20, fontSize: 1.0)
               .foregroundStyle(.secondary)
           }
           
@@ -133,7 +135,8 @@ struct AppearanceView: View {
         GeometryReader { geo in
           ZStack(alignment: .leading) {
             Text("\(Int(settings.fontSize))pt")
-              .font(.system(size: 10, weight: .semibold))
+              .font(.bsMediumText)
+              .lineHeight(13, fontSize: 1.0)
               .foregroundColor(.primary)
               .padding(.horizontal, 6)
               .padding(.vertical, 3)
@@ -153,8 +156,8 @@ struct AppearanceView: View {
   var backgroundSelectView: some View {
     VStack(alignment: .leading, spacing: 6) {
       Text("자막 스타일")
-        .font(.system(size: 11))
-        .fontWeight(.semibold)
+        .font(.bsTitle)
+        .lineHeight(11, fontSize: 1.5)
       
       HStack {
         ForEach(CaptionBG.allCases, id: \.self) { option in
@@ -168,21 +171,30 @@ struct AppearanceView: View {
                 case .black:
                   Color.black
                     .clipShape(RoundedRectangle(cornerRadius: 10))
-                  Text("가").foregroundStyle(.white)
+                  Text("가")
+                    .font(.bsSubtitleStyleSelect)
+                    .lineHeight(32.22, fontSize: 1.5)
+                    .foregroundStyle(.white)
                 case .white:
                   Color.white
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                   Text("가")
+                    .font(.bsSubtitleStyleSelect)
+                    .lineHeight(32.22, fontSize: 1.5)
                     .foregroundColor(Color(red: 0.24, green: 0.24, blue: 0.24))
                 case .gray:
                   Color.gray
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                   Text("가")
+                    .font(.bsSubtitleStyleSelect)
+                    .lineHeight(32.22, fontSize: 1.5)
                     .foregroundColor(Color.white)
                 case .contrast:
                   Color.yellow
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                   Text("가")
+                    .font(.bsSubtitleStyleSelect)
+                    .lineHeight(32.22, fontSize: 1.5)
                     .foregroundColor(Color(red: 0.24, green: 0.24, blue: 0.24))
                 }
               }
@@ -217,9 +229,9 @@ struct AppearanceView: View {
   // MARK: - 자막 강조 색상 선택 View
   var highlightSelectView: some View {
     VStack(alignment: .leading, spacing: 6) {
-      Text("자막 스타일")
-        .font(.system(size: 11))
-        .fontWeight(.semibold)
+      Text("자막 강조 색상")
+        .font(.bsTitle)
+        .lineHeight(11, fontSize: 1.5)
       
       HStack {
         ForEach(HighlightColor.allCases, id: \.self) { option in
