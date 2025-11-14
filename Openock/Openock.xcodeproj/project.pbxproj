@@ -24,7 +24,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3E887E442EADB7DE00A33566 /* Openock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Openock.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3E887E442EADB7DE00A33566 /* BOSO.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BOSO.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -85,7 +85,7 @@
 		3E887E452EADB7DE00A33566 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3E887E442EADB7DE00A33566 /* Openock.app */,
+				3E887E442EADB7DE00A33566 /* BOSO.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -114,7 +114,7 @@
 				6C94BF142EC392170057C094 /* Lottie */,
 			);
 			productName = Openock;
-			productReference = 3E887E442EADB7DE00A33566 /* Openock.app */;
+			productReference = 3E887E442EADB7DE00A33566 /* BOSO.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -304,8 +304,8 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
-				DEVELOPMENT_TEAM = TQR2QH6NMJ;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V5P96PUR94;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -327,10 +327,10 @@
 					"$(PROJECT_DIR)/Openock/ThirdParty/TFLite/lib/**",
 					"$(PROJECT_DIR)/Openock/ThirdParty/TFLite/lib",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 1.0.0;
 				OTHER_LDFLAGS = "-ltensorflowlite_c";
 				PRODUCT_BUNDLE_IDENTIFIER = com.openock.Openock;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = BOSO;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -351,8 +351,8 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
-				DEVELOPMENT_TEAM = TQR2QH6NMJ;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V5P96PUR94;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -374,10 +374,10 @@
 					"$(PROJECT_DIR)/Openock/ThirdParty/TFLite/lib/**",
 					"$(PROJECT_DIR)/Openock/ThirdParty/TFLite/lib",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 1.0.0;
 				OTHER_LDFLAGS = "-ltensorflowlite_c";
 				PRODUCT_BUNDLE_IDENTIFIER = com.openock.Openock;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = BOSO;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
