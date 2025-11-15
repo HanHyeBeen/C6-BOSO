@@ -132,7 +132,7 @@ struct AppearanceView: View {
           }
           
           CustomSlider(value: $settings.fontSize)
-            .onChange(of: settings.fontSize) { _ in
+            .onChange(of: settings.fontSize) {
               settings.save()
             }
         }
@@ -326,3 +326,4 @@ struct AppearanceView: View {
     return CGFloat(progress) * (width - thumbWidth)
   }
 }
+
