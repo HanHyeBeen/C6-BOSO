@@ -179,6 +179,12 @@ final class AudioPipeline: ObservableObject {
 
   // MARK: - 캡처 + IO
   func setupAndStart() {
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      self.isRecording = true
+      self.isPaused = false
+    }
+  
     capture.setupFullSystemCapture { [weak self] deviceID in
       guard let self, let devID = deviceID else { return }
 
