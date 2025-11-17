@@ -41,7 +41,7 @@ class WhistleDetector {
 
   // 연속 검증 (여러 프레임 연속으로 감지되어야 함)
   private var consecutiveDetections: Int = 0
-  private let requiredConsecutiveDetections: Int = 1  // 즉각적인 반응을 위해 1번만
+  private let requiredConsecutiveDetections: Int = 2  // 즉각적인 반응을 위해 1번만
 
   // 오디오 링 버퍼 (최근 2초 유지 - 축구 중계용)
   private var audioRingBuffer: [[Float]] = []
