@@ -32,6 +32,9 @@ class WhistleDetector {
   private let whistleFreqLow: Float = 2000.0  // 2000Hz
   private let whistleFreqHigh: Float = 4500.0  // 4500Hz
 
+  // Zero Crossing Rate 임계값 (호루라기의 규칙적인 고주파 특성)
+  private let minZCRThreshold: Float = 0.13  // 호루라기는 높은 ZCR을 가짐
+
   // 연속 감지 방지
   private var lastDetectionTime: Date?
   private let detectionCooldown: TimeInterval = 5.0  // 5초 쿨다운
@@ -104,6 +107,7 @@ class WhistleDetector {
   private(set) var lastDominantFrequency: Float = 0.0  // 주요 주파수
   private(set) var lastStage1Probability: Float = 0.0  // 1단계 확률
   private(set) var lastStage2Probability: Float = 0.0  // 2단계 확률
+  private(set) var lastZCR: Float = 0.0  // Zero Crossing Rate (고주파 특성)
 
   /// Detect whistle from audio buffer
   /// - Parameter buffer: Audio PCM buffer
@@ -256,11 +260,24 @@ class WhistleDetector {
     var filteredAudio = applyBandPassFilter(audioData, lowCutoff: whistleFreqLow, highCutoff: whistleFreqHigh, sampleRate: Float(currentSampleRate))
     let filteredRMS = sqrt(filteredAudio.map { $0 * $0 }.reduce(0, +) / Float(filteredAudio.count))
 
+    // Zero Crossing Rate 계산 (호루라기의 규칙적인 고주파 특성 검증)
+    let zcr = calculateZeroCrossingRate(filteredAudio)
+    lastZCR = zcr  // UI 표시용 저장
+
     // 필터링 후 에너지가 너무 낮으면 호루라기 아님
     if filteredRMS < filteredEnergyThreshold {
       lastStage2Probability = 0.0
       lastWhistleProbability = 0.0
       consecutiveDetections = 0
+      return false
+    }
+
+    // ZCR이 너무 낮으면 규칙적인 고주파 신호가 아님 (호루라기 아님)
+    if zcr < minZCRThreshold {
+      lastStage2Probability = 0.0
+      lastWhistleProbability = 0.0
+      consecutiveDetections = 0
+      print("⚠️ [WhistleDetector] Low ZCR detected: \(zcr) < \(minZCRThreshold)")
       return false
     }
 
