@@ -112,40 +112,46 @@ class AudioCaptureManager {
     // First, clean up any orphan tap process objects from previous runs
     cleanupOrphanProcessTaps()
 
-    // Find existing aggregate device
-    if let existingID = findExistingAggregateDevice() {
-      print("🔍 [AudioCaptureManager] Found existing aggregate device: \(existingID)")
+    // Find all existing aggregate devices we created
+    let existingDevices = findAllAggregateDevices()
 
-      // Get all tap UIDs from the device (before mutating the tap list)
-      let tapUIDs = getTapsFromAggregateDevice(deviceID: existingID)
-      print("📋 [AudioCaptureManager] Found \(tapUIDs.count) taps to destroy")
+    if existingDevices.isEmpty {
+      print("ℹ️ [AudioCaptureManager] No existing aggregate device to clean up")
+    } else {
+      print("🔍 [AudioCaptureManager] Found \(existingDevices.count) aggregate device(s) to clean up: \(existingDevices)")
 
-      // Destroy each tap
-      for tapUID in tapUIDs {
-        if let tapID = findTapByUID(tapUID) {
-          let status = AudioHardwareDestroyProcessTap(tapID)
-          if status == noErr {
-            print("✅ [AudioCaptureManager] Destroyed tap: \(tapID) (\(tapUID))")
+      for existingID in existingDevices {
+        print("🔍 [AudioCaptureManager] Cleaning aggregate device: \(existingID)")
+
+        // Get all tap UIDs from the device (before mutating the tap list)
+        let tapUIDs = getTapsFromAggregateDevice(deviceID: existingID)
+        print("📋 [AudioCaptureManager] Found \(tapUIDs.count) taps to destroy on device \(existingID)")
+
+        // Destroy each tap if we can still find it
+        for tapUID in tapUIDs {
+          if let tapID = findTapByUID(tapUID) {
+            let status = AudioHardwareDestroyProcessTap(tapID)
+            if status == noErr {
+              print("✅ [AudioCaptureManager] Destroyed tap: \(tapID) (\(tapUID))")
+            } else {
+              print("❌ [AudioCaptureManager] Failed to destroy tap \(tapID): \(status)")
+            }
           } else {
-            print("❌ [AudioCaptureManager] Failed to destroy tap \(tapID): \(status)")
+            print("⚠️ [AudioCaptureManager] Could not find tap ID for UID: \(tapUID) on device \(existingID)")
           }
+        }
+
+        // Clear the tap list on this aggregate device so Audio MIDI Setup UI updates as well
+        _ = removeTapFromAggregateDevice(deviceID: existingID)
+
+        // Destroy the aggregate device completely to clean up everything
+        let destroyStatus = AudioHardwareDestroyAggregateDevice(existingID)
+        if destroyStatus == noErr {
+          print("✅ [AudioCaptureManager] Destroyed existing aggregate device: \(existingID)")
         } else {
-          print("⚠️ [AudioCaptureManager] Could not find tap ID for UID: \(tapUID)")
+          print("❌ [AudioCaptureManager] Failed to destroy aggregate device \(existingID): \(destroyStatus)")
         }
       }
-
-      // Now clear the tap list on the aggregate device so Audio MIDI Setup UI updates as well
-      _ = removeTapFromAggregateDevice(deviceID: existingID)
-
-      // Destroy the aggregate device completely to clean up everything
-      let destroyStatus = AudioHardwareDestroyAggregateDevice(existingID)
-      if destroyStatus == noErr {
-        print("✅ [AudioCaptureManager] Destroyed existing aggregate device: \(existingID)")
-      } else {
-        print("❌ [AudioCaptureManager] Failed to destroy aggregate device \(existingID): \(destroyStatus)")
-      }
-    } else {
-      print("ℹ️ [AudioCaptureManager] No existing aggregate device to clean up")
     }
   }
   
@@ -500,6 +506,47 @@ class AudioCaptureManager {
     }
   }
   
+  /// Find all existing aggregate devices created by Openock
+  private func findAllAggregateDevices() -> [AudioObjectID] {
+    var address = AudioObjectPropertyAddress(
+      mSelector: kAudioHardwarePropertyDevices,
+      mScope: kAudioObjectPropertyScopeGlobal,
+      mElement: kAudioObjectPropertyElementMain
+    )
+
+    var propertySize: UInt32 = 0
+    AudioObjectGetPropertyDataSize(AudioObjectID(kAudioObjectSystemObject),
+                                   &address, 0, nil, &propertySize)
+
+    let deviceCount = Int(propertySize) / MemoryLayout<AudioObjectID>.stride
+    var devices = Array(repeating: AudioObjectID(0), count: deviceCount)
+
+    AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject),
+                               &address, 0, nil, &propertySize, &devices)
+
+    var result: [AudioObjectID] = []
+
+    for dev in devices {
+      var name: CFString = "" as CFString
+      var nameSize = UInt32(MemoryLayout<CFString>.stride)
+
+      var nameAddress = AudioObjectPropertyAddress(
+        mSelector: kAudioObjectPropertyName,
+        mScope: kAudioObjectPropertyScopeGlobal,
+        mElement: kAudioObjectPropertyElementMain
+      )
+
+      let status = AudioObjectGetPropertyData(dev, &nameAddress, 0, nil, &nameSize, &name)
+
+      if status == kAudioHardwareNoError,
+         (name as String) == "Full System Audio Capture Device" {
+        result.append(dev)
+      }
+    }
+
+    return result
+  }
+
   func findExistingAggregateDevice() -> AudioObjectID? {
       var address = AudioObjectPropertyAddress(
           mSelector: kAudioHardwarePropertyDevices,
@@ -538,7 +585,7 @@ class AudioCaptureManager {
 
       return nil
   }
-   
+
   /// Clean up created audio objects
   func cleanup() {
     print("🧹 [AudioCaptureManager] Starting cleanup...")
@@ -578,7 +625,7 @@ class AudioCaptureManager {
 
     print("✅ [AudioCaptureManager] Cleanup completed")
   }
-  
+
   deinit {
     cleanup()
   }
