@@ -110,7 +110,12 @@ class STTFoundationModels {
             - 의미 있는 단어면 절대 수정하지 마세요
             - 불확실하면 100% 원본 그대로 반환
             - 단어 하나도 제거/추가하지 마세요
-            - 수정된 텍스트만 출력 (설명 없이)
+
+            **출력 형식 (매우 중요)**:
+            - 오직 최종 텍스트만 그대로 출력하세요
+            - "수정된 텍스트:", "원본:", "정리하면" 등의 설명/레이블/접두사/접미사를 절대 쓰지 마세요
+            - 여러 문장일 때도 마찬가지로, 앞뒤에 어떤 설명 문구도 붙이지 마세요
+            - 출력은 사람이 바로 자막으로 쓸 수 있는 문장들만 포함해야 합니다
             """
         }
 
@@ -263,7 +268,7 @@ class STTFoundationModels {
         prompt += "\n[작업]\n"
         prompt += "1. 가장 자연스러운 후보를 선택 (불확실하면 1번)\n"
         prompt += "2. 명백한 오류만 최소한으로 수정\n"
-        prompt += "3. 수정된 텍스트만 출력"
+        prompt += "3. 수정된 텍스트만 출력 (설명 없이, \"수정된 텍스트:\" 같은 레이블/접두사를 절대 쓰지 말 것)"
 
         return prompt
     }
@@ -284,8 +289,8 @@ class STTFoundationModels {
             prompt += "=== Task ===\n"
             prompt += "1. Find ONLY obvious STT errors (nonsense syllables, clear proper noun typos)\n"
             prompt += "2. If uncertain, DO NOT modify\n"
-            prompt += "3. Output corrected text only (no explanation, if no correction needed, return original)\n\n"
-            prompt += "Text:"
+            prompt += "3. Output corrected text only (no explanation, no labels like \"Corrected text:\"; if no correction needed, return original)\n\n"
+            prompt += "Output:\n"
         } else {
             // Korean prompt
             if let context = context, !context.isEmpty {
@@ -298,8 +303,8 @@ class STTFoundationModels {
             prompt += "=== 작업 ===\n"
             prompt += "1. 명백한 STT 오류만 찾기 (무의미한 음절, 명백한 고유명사 오타)\n"
             prompt += "2. 불확실하면 수정하지 말 것\n"
-            prompt += "3. 수정된 텍스트만 출력 (설명 없이, 수정 없으면 원본 그대로)\n\n"
-            prompt += "텍스트:"
+            prompt += "3. 수정된 텍스트만 출력 (설명 없이, \"수정된 텍스트:\" 같은 레이블/접두사를 절대 쓰지 말 것, 수정 없으면 원본 그대로)\n\n"
+            prompt += "출력:"
         }
 
         return prompt
