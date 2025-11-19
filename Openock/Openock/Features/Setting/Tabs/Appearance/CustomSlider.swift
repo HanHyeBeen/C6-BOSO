@@ -17,14 +17,14 @@ struct CustomSlider: View {
   var body: some View {
     GeometryReader { geo in
       let width = geo.size.width
-      
+
       ZStack(alignment: .leading) {
-        
+
         // Track background
         Rectangle()
           .fill(Color.bsGrayScale2)
           .frame(height: trackHeight)
-        
+
         // Step markers
         ZStack(alignment: .leading) {
           ForEach(steps.indices, id: \.self) { index in
@@ -35,13 +35,13 @@ struct CustomSlider: View {
           }
         }
         .frame(height: trackHeight)
-        
+
         // Thumb + Label 묶음
         ZStack {
           Circle()
             .fill(Color.bsMain)
             .frame(width: thumbSize, height: thumbSize)
-          
+
           Text("\(Int(value))pt")
             .font(.bsMediumText)
             .lineHeight(1.0, fontSize: 13)
@@ -54,18 +54,26 @@ struct CustomSlider: View {
             )
             .offset(y: -20)   // 핸들 위쪽에 위치
         }
-        .offset(x: progress(width: width) - thumbSize)
-        .gesture(
-          DragGesture(minimumDistance: 0)
-            .onChanged { drag in
-              let location = min(max(0, drag.location.x - thumbSize/2), width)
-              let percent = location / width
-              let approx = percent * CGFloat(steps.count - 1)
-              let index = Int(round(approx))
-              value = steps[index]
-            }
-        )
+        .position(x: progress(width: width), y: thumbSize / 2)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: value)
+      }
+      .contentShape(Rectangle())
+      .gesture(
+        DragGesture(minimumDistance: 0)
+          .onChanged { drag in
+            let location = min(max(0, drag.location.x), width)
+            let percent = location / width
+            let approx = percent * CGFloat(steps.count - 1)
+            let index = Int(round(approx))
+            value = steps[index]
+          }
+      )
+      .onTapGesture { location in
+        let tapX = min(max(0, location.x), width)
+        let percent = tapX / width
+        let approx = percent * CGFloat(steps.count - 1)
+        let index = Int(round(approx))
+        value = steps[index]
       }
     }
     .frame(height: thumbSize)
