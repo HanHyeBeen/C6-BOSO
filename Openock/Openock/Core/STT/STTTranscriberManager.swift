@@ -37,7 +37,8 @@ class STTTranscriberManager: ObservableObject {
   // Foundation Models for text improvement --------------------------------------------------------------
   private var enableAIImprovement = true
   private var debugMode = false  // 디버그 모드: STT 원본도 함께 표시
-
+  // EngTextFilter 여부
+  private var enableEnglishFiltering = true  // 영어 필터링 활성화 여부
 
   private var recentContextSentences: [String] = []  // 최근 문장들 (맥락용)
   private let maxContextSentences = 5  // 최대 5개 문장 유지 (더 많은 맥락)
@@ -138,9 +139,29 @@ class STTTranscriberManager: ObservableObject {
         print("📝 [STTTranscriberManager] Result #\(resultCount) - isFinal: \(result.isFinal), text length: \(result.text.characters.count)")
 
         if result.isFinal {
-          let originalText = String(result.text.characters).trimmingCharacters(in: .whitespacesAndNewlines)
+          let rawOriginalText = String(result.text.characters).trimmingCharacters(in: .whitespacesAndNewlines)
 
-          print("🎤 [STTTranscriberManager] STT 원본: '\(originalText)'")
+          // Filter out English characters if enabled
+          let originalText: String
+          if enableEnglishFiltering {
+            originalText = EngTextFilter.shared.filterKoreanOnly(rawOriginalText)
+
+            // Skip if text is empty after filtering
+            guard !originalText.isEmpty else {
+              print("⏭️ [STTTranscriberManager] Filtered text is empty, skipping")
+              volatile = AttributedString("")
+              let newTranscript = String(finalized.characters)
+              self.objectWillChange.send()
+              self.transcript = newTranscript
+              continue
+            }
+
+            print("🎤 [STTTranscriberManager] STT 원본: '\(rawOriginalText)' → 필터링: '\(originalText)'")
+          } else {
+            originalText = rawOriginalText
+            print("🎤 [STTTranscriberManager] STT 원본: '\(originalText)'")
+          }
+
           self.detectedLanguage = "ko-KR"
 
           // Foundation Models로 텍스트 개선 (타임아웃 처리)
@@ -195,9 +216,16 @@ class STTTranscriberManager: ObservableObject {
           volatile = AttributedString("")
           print("📝 [STTTranscriberManager] 최종 출력: '\(improvedText)'")
         } else {
-          // Partial 결과는 그대로 표시 (실시간성 유지)
-          volatile = result.text
-          print("⏳ [STTTranscriberManager] Partial text: '\(String(result.text.characters))'")
+          // Partial 결과 표시 (실시간성 유지)
+          let partialText = String(result.text.characters)
+          if enableEnglishFiltering {
+            let filteredPartial = EngTextFilter.shared.filterKoreanOnly(partialText)
+            volatile = AttributedString(filteredPartial)
+            print("⏳ [STTTranscriberManager] Partial text: '\(partialText)' → 필터링: '\(filteredPartial)'")
+          } else {
+            volatile = result.text
+            print("⏳ [STTTranscriberManager] Partial text: '\(partialText)'")
+          }
         }
 
         let newTranscript = String(finalized.characters) + String(volatile.characters)
@@ -334,6 +362,12 @@ class STTTranscriberManager: ObservableObject {
   func setDebugMode(enabled: Bool) {
     debugMode = enabled
     print("🔧 [STTTranscriberManager] Debug mode \(enabled ? "enabled" : "disabled")")
+  }
+
+  /// 영어 필터링 켜기/끄기
+  func setEnglishFiltering(enabled: Bool) {
+    enableEnglishFiltering = enabled
+    print("🔧 [STTTranscriberManager] English filtering \(enabled ? "enabled" : "disabled")")
   }
 
   deinit {
