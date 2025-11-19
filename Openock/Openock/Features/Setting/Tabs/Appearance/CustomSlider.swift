@@ -19,12 +19,12 @@ struct CustomSlider: View {
       let width = geo.size.width - thumbSize
       
       ZStack(alignment: .leading) {
-        
+
         // Track background
         Rectangle()
           .fill(Color.bsGrayScale2)
           .frame(height: trackHeight)
-        
+
         // Step markers
         ZStack(alignment: .leading) {
           ForEach(steps.indices, id: \.self) { index in
@@ -35,13 +35,13 @@ struct CustomSlider: View {
           }
         }
         .frame(height: trackHeight)
-        
+
         // Thumb + Label 묶음
         ZStack {
           Circle()
             .fill(Color.bsMain)
             .frame(width: thumbSize, height: thumbSize)
-          
+
           Text("\(Int(value))pt")
             .font(.bsMediumText)
             .lineHeight(1.0, fontSize: 13)
@@ -53,8 +53,10 @@ struct CustomSlider: View {
                 .fill(Color.bsGrayScale4)
             )
             .offset(y: -20)   // 핸들 위쪽에 위치
+//            .allowsHitTesting(false)  // 텍스트의 탭 제스처는 무시하고 드래그만 허용
         }
         .offset(x: progress(width: width) - thumbSize*2)
+//        .contentShape(Rectangle())  // ZStack 전체를 드래그 가능하게
         .gesture(
           DragGesture(minimumDistance: 0)
             .onChanged { drag in
@@ -66,6 +68,14 @@ struct CustomSlider: View {
             }
         )
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: value)
+      }
+      .contentShape(Rectangle())
+      .onTapGesture { location in
+        let tapX = min(max(0, location.x - thumbSize/2), width)
+        let percent = tapX / width
+        let approx = percent * CGFloat(steps.count - 1)
+        let index = Int(round(approx))
+        value = steps[index]
       }
     }
     .frame(height: thumbSize)
