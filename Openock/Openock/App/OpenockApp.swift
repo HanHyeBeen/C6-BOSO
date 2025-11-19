@@ -34,10 +34,16 @@ struct OpenockApp: App {
     .windowStyle(.hiddenTitleBar)
     .windowToolbarStyle(.unifiedCompact)
 
-    MenuBarExtra("Openock", systemImage: "character.bubble") {
-      MenuBarView()
-        .environmentObject(settings)
+    MenuBarExtra {
+        MenuBarView()
+            .environmentObject(settings)
+    } label: {
+        Image("setting_logo")
+            .renderingMode(.template)
+            .resizable()
+            .frame(width: 15.19, height: 8.4)
     }
     .menuBarExtraStyle(.window)
+
   }
 }
