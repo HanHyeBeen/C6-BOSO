@@ -38,28 +38,26 @@ struct STTView: View {
 
     return max(textHeight, 50)
   }
-
   private func totalWindowHeight() -> CGFloat {
-    //let controlsVisible = pipeline.isPaused //|| isHovering
-    let controlsSpace: CGFloat = controlHeight
-    
-    let textVisible = pipeline.isPaused ? showTextArea : true
-    var height: CGFloat = 0
-    //if controlsVisible { height += controlHeight }
-    height += controlsSpace
-    if textVisible { height += baseTextAreaHeight() }
-    //if !controlsVisible && !textVisible { height = 1 }
-    return max(height, 1)
+      let controlsSpace: CGFloat = controlHeight // 50
+      let bottomPadding: CGFloat = 16
+      
+      // ⭐️ 텍스트 영역이 표시될 때 필요한 '최대' 높이를 기준으로 항상 계산합니다.
+      let requiredTextHeight = baseTextAreaHeight()
+      
+      // 이제 텍스트 영역의 표시 여부와 상관없이 항상 최대 필요 높이를 반환합니다.
+      return max(controlsSpace + requiredTextHeight + bottomPadding, 1)
   }
 
   private func updateWindowHeight() {
     guard let w = window else { return }
     let desiredContentHeight = max(totalWindowHeight(), 1)
     let currentFrame = w.frame
+    
     let currentContentRect = w.contentRect(forFrameRect: currentFrame)
     let targetContentSize = NSSize(width: currentContentRect.width, height: desiredContentHeight)
 
-    w.contentMinSize = NSSize(width: 200, height: 1)
+    w.contentMinSize = NSSize(width: 200, height: desiredContentHeight)
     w.contentMaxSize = NSSize(width: 10000, height: 10000)
     w.setContentSize(targetContentSize)
     w.contentMinSize = NSSize(width: 200, height: desiredContentHeight)
@@ -105,12 +103,12 @@ struct STTView: View {
       
         if textVisible {
           STTTextAreaView(
-            lineSpacing: lineSpacing,
-            onTap: updateWindowHeight
+            lineSpacing: lineSpacing
           )
           .environmentObject(pipeline)
           .environmentObject(settings)
         }
+        Spacer()
       }
       .padding(.bottom, 16)
       .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -127,7 +125,6 @@ struct STTView: View {
     // ✅ Swift 6: two-parameter closure (appDelegate)
     .onChange(of: appDelegate.windowDidBecomeKey) { _, newValue in
       if newValue {
-        throttledUpdateWindowHeight()
         DispatchQueue.main.async { appDelegate.windowDidBecomeKey = false }
       }
     }
@@ -158,34 +155,23 @@ struct STTView: View {
         throttledUpdateWindowHeight()
       }
     }
-
     // ✅ (HEAD 의도) YAMCue 구독 — 오버레이 트리거
     .onReceive(pipeline.$yamCue.compactMap { $0 }) { cue in
       presentOverlay(for: cue, total: 3.0)
     }
-
-    // ✅ Swift 6 두 인자 버전
-    .onChange(of: settings.fontSize) { _, _ in
-      throttledUpdateWindowHeight()
-    }
-
     .onDisappear {
       textHideTimer?.invalidate(); textHideTimer = nil
       hoverStateTimer?.invalidate(); hoverStateTimer = nil
     }
-
     .background(
       WindowAccessor { win in
         self.window = win
         if let w = win {
-          //w.delegate = resizeDelegate
           w.applyLiquidGlass()
           w.level = .floating
           w.isMovableByWindowBackground = true
           w.toolbar = nil
           w.contentResizeIncrements = NSSize(width: 1, height: 1)
-          w.contentMinSize = NSSize(width: 200, height: 1)
-          w.contentMaxSize = NSSize(width: 10000, height: 10000)
           w.styleMask.insert(.resizable)
           w.resizeIncrements = NSSize(width: 1, height: 1)
           if let contentView = w.contentView {

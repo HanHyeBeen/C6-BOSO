@@ -4,9 +4,8 @@ import SwiftUI
 struct STTTextAreaView: View {
   @EnvironmentObject var pipeline: AudioPipeline
   @EnvironmentObject var settings: SettingsManager
-
+  
   let lineSpacing: CGFloat
-  let onTap: () -> Void
 
   var body: some View {
     Group {
@@ -53,6 +52,6 @@ struct STTTextAreaView: View {
     .padding(.horizontal, 16)
     .padding(.vertical, 12)
     .contentShape(Rectangle())
-    .onTapGesture { onTap() }
+//    .onTapGesture { onTap() }
   }
 }
