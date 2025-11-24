@@ -22,7 +22,7 @@ struct AppearanceView: View {
   enum CaptionBG: String, CaseIterable {
     case black = "블랙"
     case white = "화이트"
-    case gray = "그레이"
+    case clear = "투명"
     case contrast = "고대비"
   }
   
@@ -176,10 +176,14 @@ struct AppearanceView: View {
                     .foregroundStyle(Color.bsTextBackgroundWhite)
                   Text("가")
                     .foregroundColor(Color.bsTextBackgroundBlack)
-                case .gray:
+                case .clear:
                   RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                    .background(
+                      RoundedRectangle(cornerRadius: 10)
+                        .fill(.ultraThinMaterial)
+                    )
                     .frame(width: 67, height: 67)
-                    .foregroundStyle(Color.bsTextBackgroundGray)
                   Text("가")
                     .foregroundColor(Color.white)
                 case .contrast:

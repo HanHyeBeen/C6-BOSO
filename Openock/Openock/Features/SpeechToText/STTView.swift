@@ -82,7 +82,7 @@ struct STTView: View {
     hideTitlebarOverlay()
     
     // 타이틀바 높이
-    let titlebarHeight: CGFloat = 28
+    let titlebarHeight: CGFloat = 2
     
     // contentView의 bounds 기준으로 타이틀바 영역 계산
     let contentBounds = contentView.bounds
@@ -148,6 +148,12 @@ struct STTView: View {
   
   // MARK: - Height helpers
   private func baseTextAreaHeight() -> CGFloat {
+    let placeholderMinHeight: CGFloat = 180
+
+    if pipeline.transcript.isEmpty {
+      return placeholderMinHeight
+    }
+    
     let fontName = settings.selectedFont
     let fontSize = CGFloat(settings.fontSize)
     
@@ -164,7 +170,7 @@ struct STTView: View {
       // ⭐️ 텍스트 영역이 표시될 때 필요한 '최대' 높이를 기준으로 항상 계산합니다.
       let requiredTextHeight = baseTextAreaHeight()
       
-      let titlebarHeight: CGFloat = isTrafficLightsHidden ? 0 : 28
+      let titlebarHeight: CGFloat = isTrafficLightsHidden ? 0 : 8
     
       // 이제 텍스트 영역의 표시 여부와 상관없이 항상 최대 필요 높이를 반환합니다.
       return max(requiredTextHeight + bottomPadding, 1)

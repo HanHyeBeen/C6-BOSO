@@ -51,8 +51,8 @@ final class SettingsManager: ObservableObject {
       return .black
     case "화이트", "white":
       return .white
-    case "그레이", "gray":
-      return .gray
+    case "투명", "clear":
+      return .clear
     case "고대비", "high-contrast", "high_contrast", "highcontrast":
       // HEAD 쪽 의도 유지: 고대비는 노란 배경
       return .yellow
@@ -69,7 +69,7 @@ final class SettingsManager: ObservableObject {
       return .white
     case "화이트", "white":
       return .black
-    case "그레이", "gray":
+    case "투명", "clear":
       return .white
     case "고대비", "high-contrast", "high_contrast", "highcontrast":
       return .black
