@@ -22,14 +22,13 @@ struct STTView: View {
   @State private var lastHeightUpdate = Date.distantPast
   @State private var titlebarColorView: NSView?
   @State private var hoverStateTimer: Timer?
+  @State private var keyEventMonitor: Any?
 
   // 트래픽 라이트 버튼 자동 숨김을 위한 상태 추가
   @State private var trafficLightHideTimer: Timer?
-  @State private var mouseMoveMonitor: Any?
-  @State private var mouseMoveLocalMonitor: Any?
-  @State private var lastMouseMoveTime = Date()
   @State private var isTrafficLightsHidden = false  // 타이틀바 숨김 상태 추적
   @State private var titlebarOverlayView: NSView?  // 타이틀바 오버레이 뷰
+  @State private var isPauseButtonVisible = true  // 일시정지 버튼 표시 상태
   
   private let lineSpacing: CGFloat = 4
 
@@ -50,8 +49,12 @@ struct STTView: View {
     // 타이틀바 영역도 함께 숨기기
     isTrafficLightsHidden = true
     showTitlebarOverlay()
+    // 일시정지 상태가 아닐 때만 일시정지 버튼 숨김
+    if !pipeline.isPaused {
+      isPauseButtonVisible = false
+    }
   }
-  
+
   private func showTrafficLights() {
     guard let w = window else { return }
     let buttons: [NSWindow.ButtonType] = [.closeButton, .miniaturizeButton, .zoomButton]
@@ -67,6 +70,8 @@ struct STTView: View {
     // 타이틀바 영역 다시 표시
     isTrafficLightsHidden = false
     hideTitlebarOverlay()
+    // 일시정지 버튼도 함께 표시
+    isPauseButtonVisible = true
   }
   
   //타이틀바 영역을 투명하게 덮는 오버레이 표시
@@ -122,51 +127,9 @@ struct STTView: View {
     }
   }
   
-  //마우스 움직임 감지 및 타이머 관리
+  //초기 타이머 설정
   private func setupTrafficLightAutoHide() {
-    // 기존 모니터 제거
-    if let monitor = mouseMoveMonitor {
-      NSEvent.removeMonitor(monitor)
-      mouseMoveMonitor = nil
-    }
-    if let local = mouseMoveLocalMonitor {
-      NSEvent.removeMonitor(local)
-      mouseMoveLocalMonitor = nil
-    }
-    
-    // 마우스 움직임 모니터 추가 (Global)
-    mouseMoveMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { _ in
-      self.lastMouseMoveTime = Date()
-      
-      // 버튼이 숨겨져 있으면 다시 표시
-      if let w = self.window,
-         let closeButton = w.standardWindowButton(.closeButton),
-         closeButton.alphaValue < 0.5 {
-        self.showTrafficLights()
-      }
-      
-      // 타이머 리셋
-      self.trafficLightHideTimer?.invalidate()
-      self.startTrafficLightHideTimer()
-    }
-    
-    // 윈도우 내부 마우스 움직임도 감지 (Local)
-    let localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { event in
-      self.lastMouseMoveTime = Date()
-      
-      if let w = self.window,
-         let closeButton = w.standardWindowButton(.closeButton),
-         closeButton.alphaValue < 0.5 {
-        self.showTrafficLights()
-      }
-      
-      self.trafficLightHideTimer?.invalidate()
-      self.startTrafficLightHideTimer()
-      return event
-    }
-    mouseMoveLocalMonitor = localMonitor
-    
-    // 초기 타이머 시작
+    // 초기 타이머 시작 (3초 후 숨김)
     startTrafficLightHideTimer()
   }
   
@@ -181,15 +144,6 @@ struct STTView: View {
   private func cleanupTrafficLightAutoHide() {
     trafficLightHideTimer?.invalidate()
     trafficLightHideTimer = nil
-    
-    if let monitor = mouseMoveMonitor {
-      NSEvent.removeMonitor(monitor)
-      mouseMoveMonitor = nil
-    }
-    if let local = mouseMoveLocalMonitor {
-      NSEvent.removeMonitor(local)
-      mouseMoveLocalMonitor = nil
-    }
   }
   
   // MARK: - Height helpers
@@ -254,7 +208,8 @@ struct STTView: View {
 
   // MARK: - Body
   var body: some View {
-    let textVisible = pipeline.isPaused ? showTextArea : true
+    // 텍스트 영역 항상 표시 (플레이스홀더 또는 자막)
+    let textVisible = true
 
     ZStack(alignment: .top) {
       settings.backgroundColor
@@ -278,27 +233,43 @@ struct STTView: View {
         Spacer()
         HStack {
           Spacer()
-          Button(action: {
-            if pipeline.isRecording {
-              pipeline.isPaused ? pipeline.resumeRecording() : pipeline.pauseRecording()
+          if isPauseButtonVisible {
+            Button(action: {
+              if pipeline.isRecording {
+                pipeline.isPaused ? pipeline.resumeRecording() : pipeline.pauseRecording()
+              }
+            }) {
+              Image(pipeline.isPaused ? "play_on" : "play_off")
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 36, height: 36)
+                .foregroundColor(settings.textColor)
             }
-          }) {
-            Image(pipeline.isPaused ? "play_on" : "play_off")
-              .renderingMode(.template)
-              .resizable()
-              .scaledToFit()
-              .frame(width: 36, height: 36)
-              .foregroundColor(settings.textColor)
+            .buttonStyle(.plain)
+            .disabled(!pipeline.isRecording)
+            .padding(.trailing, 16)
+            .padding([.top, .bottom], 12)
+            .transition(.opacity)
           }
-          .buttonStyle(.plain)
-          .disabled(!pipeline.isRecording)
-          .padding(.trailing, 16)
-          .padding([.top, .bottom], 12)
         }
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .contentShape(Rectangle())
+
+    // Hover show/hide controls
+    .onHover { hovering in
+      isHovering = hovering
+      if hovering {
+        // 호버링 시작: 버튼들 표시
+        showTrafficLights()
+        trafficLightHideTimer?.invalidate()
+      } else {
+        // 호버링 종료: 타이머 시작 (일시정지 상태면 재생 버튼은 유지)
+        startTrafficLightHideTimer()
+      }
+    }
 
     // ✅ Swift 6: two-parameter closure (appDelegate)
     .onChange(of: appDelegate.windowDidBecomeKey) { _, newValue in
@@ -310,18 +281,25 @@ struct STTView: View {
     // ✅ Swift 6: two-parameter closure (pipeline.isPaused)
     .onChange(of: pipeline.isPaused) { _, isPaused in
       if isPaused {
+        // 일시정지 상태: 재생 버튼 항상 표시
+        isPauseButtonVisible = true
+        trafficLightHideTimer?.invalidate()
+
         textHideTimer?.invalidate()
         if !showTextArea { showTextArea = true }
         startTextHideTimer()
-        throttledUpdateWindowHeight()
+        // 일시정지 시에는 윈도우 높이 변경하지 않음 (현재 크기 유지)
       } else {
+        // 재생 상태: 호버링 상태가 아니면 타이머 시작
+        if !isHovering {
+          startTrafficLightHideTimer()
+        }
+
         textHideTimer?.invalidate()
         if !showTextArea {
           withAnimation(.easeInOut(duration: 0.3)) { showTextArea = true }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-          throttledUpdateWindowHeight()
-        }
+        // 재생 시작 시에도 윈도우 높이 변경하지 않음 (현재 크기 유지)
       }
     }
 
@@ -332,6 +310,21 @@ struct STTView: View {
       DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
         throttledUpdateWindowHeight()
       }
+
+      // 스페이스바 전역 모니터 설정
+      keyEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+        if event.keyCode == 49 { // 49 = 스페이스바
+          if pipeline.isRecording {
+            if pipeline.isPaused {
+              pipeline.resumeRecording()
+            } else {
+              pipeline.pauseRecording()
+            }
+          }
+          return nil // 이벤트 소비
+        }
+        return event
+      }
     }
     // ✅ (HEAD 의도) YAMCue 구독 — 오버레이 트리거
     .onReceive(pipeline.$yamCue.compactMap { $0 }) { cue in
@@ -340,8 +333,13 @@ struct STTView: View {
     .onDisappear {
       textHideTimer?.invalidate(); textHideTimer = nil
       hoverStateTimer?.invalidate(); hoverStateTimer = nil
-      
       cleanupTrafficLightAutoHide()
+
+      // 키 이벤트 모니터 제거
+      if let monitor = keyEventMonitor {
+        NSEvent.removeMonitor(monitor)
+        keyEventMonitor = nil
+      }
     }
     .background(
       WindowAccessor { win in
@@ -354,6 +352,7 @@ struct STTView: View {
           w.contentResizeIncrements = NSSize(width: 1, height: 1)
           w.styleMask.insert(.resizable)
           w.resizeIncrements = NSSize(width: 1, height: 1)
+
           if let contentView = w.contentView {
             contentView.autoresizingMask = [.width, .height]
             contentView.translatesAutoresizingMaskIntoConstraints = true
