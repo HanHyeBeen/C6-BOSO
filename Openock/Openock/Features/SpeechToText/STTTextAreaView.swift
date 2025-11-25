@@ -11,13 +11,12 @@ struct STTTextAreaView: View {
     Group {
       if pipeline.transcript.isEmpty {
         VStack(alignment: .center, spacing: 18) {
-          Image(systemName: "text.aligncenter")
-            .font(.system(size: 52))
-            .foregroundStyle(Color.bsGrayScale2)
-          Text("음성을 감지하면 자막이 표시됩니다.")
+//
+          Text("Space를 눌러 일시정지 \n음성을 감지하면 자막이 표시됩니다.")
             .font(.bsCaption1)
             .lineHeight(1.5, fontSize: 24)
             .foregroundStyle(Color.bsGrayScale2)
+            .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
       } else {
