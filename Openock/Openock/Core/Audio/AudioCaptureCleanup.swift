@@ -369,7 +369,7 @@ extension AudioCaptureManager {
 
     // Set empty array to remove all taps
     var emptyArray = [] as CFArray
-    var arraySize = UInt32(MemoryLayout<CFArray>.stride)
+    let arraySize = UInt32(MemoryLayout<CFArray>.stride)
 
     let status = AudioObjectSetPropertyData(deviceID, &tapListAddress, 0, nil, arraySize, &emptyArray)
 
