@@ -123,7 +123,7 @@ class AudioCaptureManager {
 
     let tapUIDString = tapUID as String
     var tapArray = [tapUIDString] as CFArray
-    var tapArraySize = UInt32(MemoryLayout<CFArray>.stride)
+    let tapArraySize = UInt32(MemoryLayout<CFArray>.stride)
 
     let status = AudioObjectSetPropertyData(deviceID, &tapListAddress, 0, nil, tapArraySize, &tapArray)
 
