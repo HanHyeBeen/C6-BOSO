@@ -327,16 +327,14 @@ class WhistleDetector {
     }
 
     var maxStage2Prob: Float = 0.0
-    var bestWindowIndex = 0
 
     // 슬라이딩 윈도우: 최근 1초, 0.7초, 0.5초 세 구간 검사
-    for (index, windowData) in windowsData.enumerated() {
+    for (_, windowData) in windowsData.enumerated() { // Changed (index, windowData) to (_, windowData) since index is no longer used
       let enhancedAudio = enhanceWhistleAudio(windowData.audio, sampleRate: Float(currentSampleRate))
       let prob = runModelPrediction(enhancedAudio)
 
       if prob > maxStage2Prob {
         maxStage2Prob = prob
-        bestWindowIndex = index + 1
       }
     }
 
@@ -471,7 +469,7 @@ class WhistleDetector {
     var audioData = samples
 
     // 리샘플링
-    let currentRate = Double(sampleRate)  // 이미 16000Hz로 가정
+    // 이미 16000Hz로 가정
     if audioData.count != bufferSize {
       // 버퍼 크기 맞추기
       if audioData.count < bufferSize {
