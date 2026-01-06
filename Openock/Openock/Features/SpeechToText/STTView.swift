@@ -27,7 +27,6 @@ struct STTView: View {
   // 트래픽 라이트 버튼 자동 숨김을 위한 상태 추가
   @State private var trafficLightHideTimer: Timer?
   @State private var isTrafficLightsHidden = false  // 타이틀바 숨김 상태 추적
-  @State private var titlebarOverlayView: NSView?  // 타이틀바 오버레이 뷰
   @State private var isPauseButtonVisible = true  // 일시정지 버튼 표시 상태
   
   private let lineSpacing: CGFloat = 4
@@ -48,7 +47,6 @@ struct STTView: View {
     }
     // 타이틀바 영역도 함께 숨기기
     isTrafficLightsHidden = true
-    showTitlebarOverlay()
     // 일시정지 상태가 아닐 때만 일시정지 버튼 숨김
     if !pipeline.isPaused {
       isPauseButtonVisible = false
@@ -69,64 +67,11 @@ struct STTView: View {
     }
     // 타이틀바 영역 다시 표시
     isTrafficLightsHidden = false
-    hideTitlebarOverlay()
     // 일시정지 버튼도 함께 표시
     isPauseButtonVisible = true
   }
   
-  //타이틀바 영역을 투명하게 덮는 오버레이 표시
-  private func showTitlebarOverlay() {
-    guard let w = window, let contentView = w.contentView else { return }
-    
-    // 기존 오버레이 제거
-    hideTitlebarOverlay()
-    
-    // 타이틀바 높이
-    let titlebarHeight: CGFloat = 2
-    
-    // contentView의 bounds 기준으로 타이틀바 영역 계산
-    let contentBounds = contentView.bounds
-    let titlebarRect = NSRect(
-      x: 0,
-      y: contentBounds.height - titlebarHeight,
-      width: contentBounds.width,
-      height: titlebarHeight
-    )
-    
-    // 투명한 오버레이 뷰 생성
-    let overlayView = NSView(frame: titlebarRect)
-    overlayView.wantsLayer = true
-    
-    // 배경색과 동일하게 설정하여 타이틀바 영역 전체를 덮음
-    let backgroundColor = NSColor(settings.backgroundColor)
-    overlayView.layer?.backgroundColor = backgroundColor.withAlphaComponent(0.8).cgColor
-    overlayView.autoresizingMask = [.width, .minYMargin]
-    
-    // 윈도우의 contentView에 추가 (상단에 배치)
-    contentView.addSubview(overlayView, positioned: .above, relativeTo: nil)
-    titlebarOverlayView = overlayView
-      
-    // 애니메이션으로 페이드인
-    overlayView.alphaValue = 0.0
-    NSAnimationContext.runAnimationGroup { context in
-      context.duration = 0.3
-      overlayView.animator().alphaValue = 1.0
-    }
-  }
-  
-  //타이틀바 오버레이 제거
-  private func hideTitlebarOverlay() {
-    guard let overlayView = titlebarOverlayView else { return }
-    
-    NSAnimationContext.runAnimationGroup { context in
-      context.duration = 0.3
-      overlayView.animator().alphaValue = 0.0
-    } completionHandler: {
-      overlayView.removeFromSuperview()
-      self.titlebarOverlayView = nil
-    }
-  }
-  
+
   //초기 타이머 설정
   private func setupTrafficLightAutoHide() {
     // 초기 타이머 시작 (3초 후 숨김)
@@ -258,6 +203,15 @@ struct STTView: View {
           }
         }
       }
+      if isTrafficLightsHidden {
+        VStack(spacing: 0) {
+          Rectangle()
+            .fill(settings.backgroundColor)
+            .frame(height: 0)
+          Spacer()
+        }
+        .allowsHitTesting(false)
+      }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .contentShape(Rectangle())
@@ -368,19 +322,6 @@ struct STTView: View {
         }
       }
     )
-    .onChange(of: window?.frame) { _, _ in
-      // 윈도우 크기 변경 시 오버레이 위치와 크기 업데이트
-      if isTrafficLightsHidden, let overlayView = titlebarOverlayView, let w = window, let contentView = w.contentView {
-        let titlebarHeight: CGFloat = 28
-        let contentBounds = contentView.bounds
-        overlayView.frame = NSRect(
-          x: 0,
-          y: contentBounds.height - titlebarHeight,
-          width: contentBounds.width,
-          height: titlebarHeight
-        )
-      }
-    }
   }
 }
 
