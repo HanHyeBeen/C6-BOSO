@@ -72,7 +72,7 @@
 
 | <img width="401" height="401" alt="enoch" src="https://github.com/user-attachments/assets/e67f2fa3-f9da-4451-a402-e8fac8166b07" /> | <img width="401" height="401" alt="leon" src="https://github.com/user-attachments/assets/3dba1c59-c360-452b-9599-5342a7d733a9" /> | <img width="401" height="401" alt="mary" src="https://github.com/user-attachments/assets/9104e718-b46a-440c-aefd-79539ce9efa8" /> | <img width="401" height="401" alt="paduck" src="https://github.com/user-attachments/assets/d14d6389-63ef-476a-8291-077a2091b2ca" /> | <img width="401" height="401" alt="root" src="https://github.com/user-attachments/assets/ecf81805-6447-4585-b576-3416618308fe" /> | <img width="401" height="401" alt="Frame-4" src="https://github.com/user-attachments/assets/ea08566f-1a37-43dd-9808-2e0d6110cc89" /> |
 |:------:|:------:|:------:|:------:|:------:|:------:|
-| [**한혜빈 (Enoch)**]<br>*PM, Tech*| [**Leon**]<br>*Design* | [**Mary**]<br>*Tech* | [**Paduck**]<br>*Tech* | [**Root**]<br>*Tech* | [**Wendy**]<br>*Design* |
+| **한혜빈 (Enoch)**<br>*PM, Tech*| **Leon**<br>*Design* | **Mary**<br>*Tech* | **Paduck**<br>*Tech* | **Root**<br>*Tech* | **Wendy**<br>*Design* |
 
 <br><br><br>
 
