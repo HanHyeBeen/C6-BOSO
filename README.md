@@ -15,13 +15,13 @@
 
 > 청각장애인이 맥북으로 재생되는 영상의 소리를 실시간 자막과 시각적 효과로 확인하며, 몰입감 있게 시청할 수 있도록 돕는 앱
 
-[🔗 앱스토어/웹 링크](https://example.com)
+[🔗 앱스토어/웹 링크](https://apps.apple.com/kr/app/%EB%B3%B4%EC%86%8C-boso/id6754626482?mt=12)
 
 <br>
 
 ## 📆 프로젝트 기간
-- 전체 기간: `2025.09.01 - 2025.11.28`
-- 개발 기간: `2025.10.23 - 2025.11.21`
+- 전체 기간: `2025.09.01 - 2026.01.31`
+- 개발 기간: `2025.10.23 - 2026.01.31`
 
 <br>
 
@@ -49,17 +49,17 @@
 
 ## 🌟 주요 기능
 
-- ✅ 실시간 자막 제공 _ 맥북에서 재생되는 영상의 소리를 캡처하여 STT로 변환하여 자막을 실시간으로 표시합니다.
+- ✅ 실시간 자막 제공 _ 맥북에서 재생되는 영상의 소리를 캡처하여 STT로 변환하여 자막을 실시간으로 표시합니다.<br><br>
   <img width="378" height="240.5" alt="Frame-7" src="https://github.com/user-attachments/assets/ee34b37d-f540-43a3-a7f1-c80e276393e8" />
-  <img width="378" height="240.5" alt="Frame-1" src="https://github.com/user-attachments/assets/c08533bb-29e0-49cc-b372-dcdffca2ad38" />
+  <img width="378" height="240.5" alt="Frame-1" src="https://github.com/user-attachments/assets/c08533bb-29e0-49cc-b372-dcdffca2ad38" /><br><br>
 
-- ✅ 청각 신호 시각화 _ 소리 크기, 분위기, 휘슬 등 특정 청각적 요소를 글자 크기, 색상, 애니메이션 등으로 시각화합니다.
+- ✅ 청각 신호 시각화 _ 소리 크기, 분위기, 휘슬 등 특정 청각적 요소를 글자 크기, 색상, 애니메이션 등으로 시각화합니다.<br><br>
   <img width="378" height="240.5" alt="Frame-3" src="https://github.com/user-attachments/assets/8dd5ae0f-eab9-419e-9fa9-0d42d21f7e87" />
   <img width="378" height="240.5" alt="Frame-4" src="https://github.com/user-attachments/assets/4b8bbd87-2862-44e7-b4fc-53bac1fceb90" />
   <img width="378" height="240.5" alt="Frame-5" src="https://github.com/user-attachments/assets/7f3ae849-7d30-4795-bd30-7ec5b2ad4ce6" />
-  <img width="378" height="240.5" alt="Frame-6" src="https://github.com/user-attachments/assets/d904daa9-5eb9-485d-b0d4-63bf8be7f708" />
+  <img width="378" height="240.5" alt="Frame-6" src="https://github.com/user-attachments/assets/d904daa9-5eb9-485d-b0d4-63bf8be7f708" /><br><br>
 
-- ✅ 효과 On/Off _ 영상 종류나 상황에 따라 시각적 표현 기능을 자유롭게 켜거나 끌 수 있습니다
+- ✅ 효과 On/Off _ 영상 종류나 상황에 따라 시각적 표현 기능을 자유롭게 켜거나 끌 수 있습니다.<br><br>
   <img width="378" height="240.5" alt="Frame-2" src="https://github.com/user-attachments/assets/7402c92a-a4e5-4cbc-a321-589de970cc84" />
 
 <br>
@@ -72,7 +72,7 @@
 
 | <img width="401" height="401" alt="enoch" src="https://github.com/user-attachments/assets/e67f2fa3-f9da-4451-a402-e8fac8166b07" /> | <img width="401" height="401" alt="leon" src="https://github.com/user-attachments/assets/3dba1c59-c360-452b-9599-5342a7d733a9" /> | <img width="401" height="401" alt="mary" src="https://github.com/user-attachments/assets/9104e718-b46a-440c-aefd-79539ce9efa8" /> | <img width="401" height="401" alt="paduck" src="https://github.com/user-attachments/assets/d14d6389-63ef-476a-8291-077a2091b2ca" /> | <img width="401" height="401" alt="root" src="https://github.com/user-attachments/assets/ecf81805-6447-4585-b576-3416618308fe" /> | <img width="401" height="401" alt="Frame-4" src="https://github.com/user-attachments/assets/ea08566f-1a37-43dd-9808-2e0d6110cc89" /> |
 |:------:|:------:|:------:|:------:|:------:|:------:|
-| [**Enoch (한혜빈)**](https://github.com/HanHyeBeen)<br>*PM, Tech*| [**Leon (김혜서)**](https://github.com/being0825)<br>*Design* | [**Mary (임희서)**](https://github.com/Ellyhs)<br>*Tech* | [**Paduck (서용원)**](https://github.com/paohree)<br>*Tech* | [**Root (맹지주)**](https://github.com/maengjj)<br>*Tech* | [**Wendy (윤예람)**](https://github.com/altol2)<br>*Design* |
+| [**한혜빈 (Enoch)**]<br>*PM, Tech*| [**Leon**]<br>*Design* | [**Mary**]<br>*Tech* | [**Paduck**]<br>*Tech* | [**Root**]<br>*Tech* | [**Wendy**]<br>*Design* |
 
 <br><br><br>
 
